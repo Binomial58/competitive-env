@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# runall
+# C++: build + ioall
+# Python: pyall
+
+if [ $# -eq 0 ]; then
+    echo "usage: runall <source_name>"
+    exit 1
+fi
+
+ARG="$1"
+
+# 拡張子を除去
+NAME="${ARG%.cpp}"
+NAME="${NAME%.py}"
+
+if [ -f "$NAME.cpp" ]; then
+    build.sh "$NAME" || exit 1
+    ioall.sh
+
+elif [ -f "$NAME.py" ]; then
+    pyall.sh "$NAME"
+
+else
+    echo "error: $NAME.cpp or $NAME.py not found."
+    exit 1
+fi

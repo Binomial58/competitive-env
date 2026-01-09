@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# run
+# C++: build + io term
+# Python: run directly
+
+if [ $# -eq 0 ]; then
+    echo "usage: run <source_name>"
+    exit 1
+fi
+
+ARG="$1"
+
+# 拡張子を除去（.cpp / .py が付いていてもOK）
+NAME="${ARG%.cpp}"
+NAME="${NAME%.py}"
+
+if [ -f "$NAME.cpp" ]; then
+    # C++
+    build.sh "$NAME" || exit 1
+    io.sh term
+
+elif [ -f "$NAME.py" ]; then
+    # Python
+    python3 "$NAME.py"
+
+else
+    echo "error: $NAME.cpp or $NAME.py not found."
+    exit 1
+fi
