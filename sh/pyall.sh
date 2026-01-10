@@ -1,6 +1,17 @@
 #!/bin/bash
 
-PY_FILE="${1:-main}.py"
+# 対象ファイル名
+NAME="$1"
+
+# 引数なし → main.py
+if [ -z "$NAME" ]; then
+    PY_FILE="main.py"
+else
+    # .py が付いていたら外す
+    NAME="${NAME%.py}"
+    PY_FILE="$NAME.py"
+fi
+
 SAMPLE_DIR="samples"
 
 if [ ! -f "$PY_FILE" ]; then
@@ -21,16 +32,12 @@ for infile in "$SAMPLE_DIR"/*.in; do
     outfile="$SAMPLE_DIR/$base.out"
     tmpfile="$SAMPLE_DIR/$base.tmp"
 
-    start=$(date +%s%3N)
     python3 "$PY_FILE" < "$infile" > "$tmpfile"
-    end=$(date +%s%3N)
-
-    elapsed=$((end - start))
 
     if diff -u "$outfile" "$tmpfile" > /dev/null; then
-        echo "[OK]   $base (${elapsed} ms)"
+        echo "[OK]   $base"
     else
-        echo "[NG]   $base (${elapsed} ms)"
+        echo "[NG]   $base"
         diff -u "$outfile" "$tmpfile"
         OK_ALL=false
     fi
