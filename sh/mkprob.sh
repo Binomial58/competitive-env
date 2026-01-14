@@ -33,20 +33,15 @@ case "$LANG" in
 #include <bits/stdc++.h>
 using namespace std;
 
-/* utility : mathematical modulo (always non-negative) */
-inline int mod(int k, int n)
-{
-    return (k % n + n) % n;
-}
+using ll = long long;
 
-inline long long mod(long long k, long long n)
-{
-    return (k % n + n) % n;
-}
+#define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
+#define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
 
 int main() {
     
 }
+
 EOF
         echo "created C++ problem: $PROB (from $FULL)"
         ;;
