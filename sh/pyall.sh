@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# options
+CLEAN=false
+if [ "$1" = "--clean" ]; then
+    CLEAN=true
+    shift
+fi
+
 # 対象ファイル名
 NAME="$1"
 
@@ -13,6 +20,11 @@ else
 fi
 
 SAMPLE_DIR="samples"
+FAIL_DIR="failures"
+
+if $CLEAN; then
+    rm -rf "$FAIL_DIR"
+fi
 
 if [ ! -f "$PY_FILE" ]; then
     echo "error: $PY_FILE not found."
@@ -31,6 +43,7 @@ for infile in "$SAMPLE_DIR"/*.in; do
     base="$(basename "${infile%.in}")"
     outfile="$SAMPLE_DIR/$base.out"
     tmpfile="$SAMPLE_DIR/$base.tmp"
+    difffile="$FAIL_DIR/$base.diff"
 
     start=$(date +%s%3N)
     python3 "$PY_FILE" < "$infile" > "$tmpfile"
@@ -41,7 +54,8 @@ for infile in "$SAMPLE_DIR"/*.in; do
         echo "[OK]   $base (${elapsed} ms)"
     else
         echo "[NG]   $base (${elapsed} ms)"
-        diff -u "$outfile" "$tmpfile"
+        mkdir -p "$FAIL_DIR"
+        diff -u "$outfile" "$tmpfile" | tee "$difffile"
         OK_ALL=false
     fi
 

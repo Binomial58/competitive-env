@@ -1,15 +1,130 @@
+# competitive-env
+
+競技プログラミング用のローカルコマンド集。  
+C++/Python のビルド・実行・サンプル検証を短いコマンドで行う。
+
+---
+
 # 前提ディレクトリ構成
- ```text
- ~/competitive/
- └── sh/
-     ├── build.sh    （bd）
-     ├── io.sh       （io / io term）
-     ├── ioall.sh    （C++ 全サンプル実行）
-     ├── pyall.sh    （Python 全サンプル実行）
-     ├── run         （自動判別で単体実行）
-     ├── runall      （自動判別で全サンプル実行）
-     └── mkprob.sh   （問題テンプレ生成）
- ```
+
+```text
+~/competitive-env/
+└── sh/
+    ├── build.sh    （bd）
+    ├── io.sh       （io / io term）
+    ├── ioall       （C++ 全サンプル実行）
+    ├── pyall.sh    （Python 全サンプル実行）
+    ├── run         （自動判別で単体実行）
+    ├── runall      （自動判別で全サンプル実行）
+    └── mkprob.sh   （問題テンプレ生成）
+```
+
+`.zshrc` で PATH を通して使う想定。
+
+---
+
+# 主要コマンド（C++ / Python）
+
+## 自動ファイル判定のルール
+
+引数なしのときは以下の順で自動判定する。
+
+1) **現在のフォルダ名と同名の `*.cpp` / `*.py` があればそれを使う**  
+2) なければ **`*.cpp` / `*.py` が1つだけある場合はそれを使う**  
+3) それ以外はエラー（明示的にファイル名を指定）
+
+---
+
+## run：単体実行（C++ / Python）
+
+概要:
+- C++: `build.sh` → `io term`
+- Python: `python3` で直接実行
+
+例:
+```bash
+run
+run a
+run a.cpp
+run a.py
+```
+
+---
+
+## runall：全サンプル実行（C++ / Python）
+
+概要:
+- C++: `build.sh` → `ioall`
+- Python: `pyall`
+- すべて通過したら **ソースを自動コピー**
+
+例:
+```bash
+runall
+runall a
+runall a.cpp
+runall a.py
+```
+
+---
+
+## pyall：Python 全サンプル一括実行
+
+概要:
+- `samples/` の `.in/.out` を全実行
+- 実行時間を ms 表示
+- すべて通過したら **ソースを自動コピー**
+- NG の diff を `failures/` に保存
+- `--clean` で `failures/` を削除
+
+例:
+```bash
+pyall
+pyall a
+pyall abc439_a
+pyall --clean
+pyall --clean abc439_a
+```
+
+---
+
+## ioall：C++ 全サンプル一括実行
+
+概要:
+- `samples/` の `.in/.out` を全実行
+- 実行時間を ms 表示
+- NG の diff を `failures/` に保存
+- `--clean` で `failures/` を削除
+
+例:
+```bash
+ioall
+ioall --clean
+```
+
+---
+
+## pyrun：Python 単体実行（stdin はターミナル貼り付け）
+
+概要:
+- `python3` をそのまま実行
+- 入力はターミナルに貼り付ける運用向け
+- 自動判定は run/runall と同じ
+
+例:
+```bash
+pyrun
+pyrun a
+pyrun a.py
+```
+
+---
+
+## cleanfail：failures/ を削除
+
+```bash
+cleanfail
+```
 
 ---
 
@@ -17,9 +132,8 @@
 
 ## 概要
 
-問題用のディレクトリを自動生成するコマンドである．  
-C++ または Python を選択できる．  
-フォルダ名は問題名そのままになる．
+問題用のディレクトリを自動生成する。  
+C++ または Python を選択できる。
 
 ---
 
@@ -35,62 +149,48 @@ C++ または Python を選択できる．
 
 ## 使い方
 
- ```bash
- mkprob cpp abc365_a
- ```
+```bash
+mkprob cpp abc365_a
+```
 
 生成される構成：
+```text
+abc365_a/
+├── abc365_a.cpp
+├── in.txt
+├── out.txt
+```
 
- ```text
- abc365_a/
- ├── abc365_a.cpp
- ├── in.txt
- ├── out.txt
- ```
-
- ```bash
- mkprob py abc365_b
- ```
+```bash
+mkprob py abc365_b
+```
 
 生成される構成：
-
- ```text
- abc365_b/
- └── abc365_b.py
- ```
+```text
+abc365_b/
+└── abc365_b.py
+```
 
 ---
 
 # bd：C++ コンパイル
 
-# 概要
+## 概要
 
-指定した C++ ファイルをコンパイルし，`a.out` を生成する．  
-`atcoder` が含まれる場合は `./ac-library` を include する．  
-`gmpxx.h` が含まれる場合は `-lgmpxx -lgmp` を付与する．  
-`debug` 指定時は sanitizer を有効化する．
+指定した C++ ファイルをコンパイルし `a.out` を生成する。  
+`atcoder` が含まれる場合は `./ac-library` を include する。  
+`gmpxx.h` が含まれる場合は `-lgmpxx -lgmp` を付与する。  
+`debug` 指定時は sanitizer を有効化する。
 
 ---
 
 ## 使い方
 
-`a.cpp` をコンパイルする：
-
- ```bash
- bd a
- ```
-
-`main.cpp` をコンパイルする：
-
- ```bash
- bd
- ```
-
-デバッグオプション付きでコンパイルする：
-
- ```bash
- bd a debug
- ```
+```bash
+bd a
+bd
+bd a debug
+```
 
 ---
 
@@ -98,120 +198,25 @@ C++ または Python を選択できる．
 
 ## 概要
 
-`in.txt` を標準入力として `a.out` を実行する．  
-デフォルトは `out.txt` に出力し，`term` 指定時は標準出力に表示する．  
-実行時間を ms 表示する．
+`in.txt` を標準入力として `a.out` を実行する。  
+デフォルトは `out.txt` に出力し、`term` 指定時は標準出力に表示する。
 
 ---
 
 ## 使い方
 
- ```bash
- io
- ```
-
- ```bash
- io term
- ```
+```bash
+io
+io term
+```
 
 ---
 
-# ioall：C++ 全サンプル一括実行
+# トラブルシューティング
 
-## 概要
-
-`samples/` ディレクトリ内の  
-すべての `.in` / `.out` ペアを用いて検証を行う．
-
----
-
-## 前提構成
-
- ```text
- samples/
- ├── sample-0.in
- ├── sample-0.out
- ├── sample-1.in
- ├── sample-1.out
- ```
-
----
-
-## 使い方
-
- ```bash
- ioall
- ```
-
----
-
-# pyall：Python 全サンプル一括実行
-
-## 概要
-
-Python プログラムを用いて  
-`samples/` 内のすべてのサンプルを一括検証する．
-
----
-
-## 使い方
-
- ```bash
- pyall
- ```
-
- ```bash
- pyall a
- ```
-
- ```bash
- pyall abc439_a
- ```
-
----
-
-# run：単体実行（C++ / Python）
-
-## 概要
-
-引数の名前に応じて C++ / Python を判別して実行する．  
-C++ の場合は `build.sh` の後に `io.sh term` を呼ぶ．  
-Python の場合は `python3` で直接実行する．
-
-## 使い方
-
- ```bash
- run a
- ```
-
- ```bash
- run a.cpp
- ```
-
- ```bash
- run a.py
- ```
-
----
-
-# runall：全サンプル実行（C++ / Python）
-
-## 概要
-
-引数の名前に応じて C++ / Python を判別して全サンプルを実行する．  
-C++ の場合は `build.sh` の後に `ioall.sh` を呼ぶ．  
-Python の場合は `pyall.sh` を呼ぶ．
-
-## 使い方
-
- ```bash
- runall a
- ```
-
- ```bash
- runall a.cpp
- ```
-
- ```bash
- runall a.py
- ```
+- **`main.cpp` / `main.py` が見つからない**
+  - 引数なし実行時の自動判定が失敗している。  
+    フォルダ名と同名のファイルが無い or 複数ファイルがある場合は  
+    `run a` / `runall a` / `pyall a` のように明示指定する。
+- **コピーされない**
+  - `xclip` が必要。無い場合は警告を出してコピーをスキップする。
