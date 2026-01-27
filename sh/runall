@@ -4,23 +4,28 @@
 # C++: build + ioall
 # Python: pyall
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [ $# -eq 0 ]; then
-    echo "usage: runall <source_name>"
-    exit 1
+    # 引数なしの場合はカレントディレクトリ名を使う
+    NAME="$(basename "$PWD")"
+else
+    ARG="$1"
+    # 拡張子を除去
+    NAME="${ARG%.cpp}"
+    NAME="${NAME%.py}"
 fi
 
-ARG="$1"
-
-# 拡張子を除去
-NAME="${ARG%.cpp}"
-NAME="${NAME%.py}"
-
 if [ -f "$NAME.cpp" ]; then
-    build.sh "$NAME" || exit 1
-    ioall.sh
+    "$SCRIPT_DIR/build.sh" "$NAME" || exit 1
+    if [ -x "$SCRIPT_DIR/ioall.sh" ]; then
+        "$SCRIPT_DIR/ioall.sh"
+    else
+        "$SCRIPT_DIR/ioall"
+    fi
 
 elif [ -f "$NAME.py" ]; then
-    pyall.sh "$NAME"
+    "$SCRIPT_DIR/pyall.sh" "$NAME"
 
 else
     echo "error: $NAME.cpp or $NAME.py not found."

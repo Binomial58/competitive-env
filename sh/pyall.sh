@@ -32,12 +32,15 @@ for infile in "$SAMPLE_DIR"/*.in; do
     outfile="$SAMPLE_DIR/$base.out"
     tmpfile="$SAMPLE_DIR/$base.tmp"
 
+    start=$(date +%s%3N)
     python3 "$PY_FILE" < "$infile" > "$tmpfile"
+    end=$(date +%s%3N)
+    elapsed=$((end - start))
 
     if diff -u "$outfile" "$tmpfile" > /dev/null; then
-        echo "[OK]   $base"
+        echo "[OK]   $base (${elapsed} ms)"
     else
-        echo "[NG]   $base"
+        echo "[NG]   $base (${elapsed} ms)"
         diff -u "$outfile" "$tmpfile"
         OK_ALL=false
     fi
@@ -46,7 +49,14 @@ for infile in "$SAMPLE_DIR"/*.in; do
 done
 
 if $OK_ALL; then
-    echo "=== ALL PYTHON SAMPLES PASSED ==="
+    echo "=== 全サンプルOK ==="
+    echo "=== コピーします ==="
+    if command -v xclip >/dev/null 2>&1; then
+        xclip -selection clipboard < "$PY_FILE"
+        echo "[Copied] $PY_FILE"
+    else
+        echo "warning: xclip not found; not copied."
+    fi
 else
-    echo "=== SOME PYTHON SAMPLES FAILED ==="
+    echo "=== 一部NG ==="
 fi

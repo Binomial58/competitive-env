@@ -38,7 +38,7 @@ for infile in "$SAMPLE_DIR"/*.in; do
 done
 
 if $OK_ALL; then
-    echo "=== ALL C++ SAMPLES PASSED ==="
+    echo "=== 全サンプルOK ==="
 else
-    echo "=== SOME C++ SAMPLES FAILED ==="
+    echo "=== 一部NG ==="
 fi
