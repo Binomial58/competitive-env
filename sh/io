@@ -12,10 +12,16 @@ if [ ! -f "./in.txt" ]; then
     exit 1
 fi
 
+if [ "$1" = "term" ]; then
+    cat in.txt
+    echo
+fi
+
 start=$(date +%s%3N)
 
 if [ "$1" = "term" ]; then
     ./a.out < in.txt
+    echo
 else
     ./a.out < in.txt > out.txt
 fi

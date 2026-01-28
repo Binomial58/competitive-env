@@ -68,6 +68,22 @@ runall a.py
 
 ---
 
+## run0〜run999：サンプル番号指定実行
+
+概要:
+- `samples/` の `sample-<番号>.in/.out` を1件だけ検証
+- 該当サンプルが無い場合は `in.txt` を使う（`out.txt` があれば比較）
+- 自動判定は run/runall と同じ
+- 実行時は **入力 → 空行 → 出力** の順に表示される
+
+例:
+```bash
+run0
+run5
+```
+
+---
+
 ## pyall：Python 全サンプル一括実行
 
 概要:
@@ -76,6 +92,7 @@ runall a.py
 - すべて通過したら **ソースを自動コピー**
 - NG の diff を `failures/` に保存
 - `--clean` で `failures/` を削除
+- 全サンプル OK のときは `failures/` を自動削除
 
 例:
 ```bash
@@ -95,6 +112,7 @@ pyall --clean abc439_a
 - 実行時間を ms 表示
 - NG の diff を `failures/` に保存
 - `--clean` で `failures/` を削除
+- 全サンプル OK のときは `failures/` を自動削除
 
 例:
 ```bash
@@ -116,6 +134,21 @@ ioall --clean
 pyrun
 pyrun a
 pyrun a.py
+```
+
+---
+
+## py0〜py999：Python サンプル番号指定実行
+
+概要:
+- `samples/` の `sample-<番号>.in/.out` を1件だけ検証
+- 該当サンプルが無い場合は `in.txt` を使う（`out.txt` があれば比較）
+- 実行時は **入力 → 空行 → 出力** の順に表示される
+
+例:
+```bash
+py1
+py5
 ```
 
 ---
@@ -199,7 +232,8 @@ bd a debug
 ## 概要
 
 `in.txt` を標準入力として `a.out` を実行する。  
-デフォルトは `out.txt` に出力し、`term` 指定時は標準出力に表示する。
+デフォルトは `out.txt` に出力し、`term` 指定時は標準出力に表示する。  
+`term` のときは **入力 → 空行 → 出力** の順に表示される。
 
 ---
 

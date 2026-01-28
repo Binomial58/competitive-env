@@ -2,13 +2,35 @@
 
 # options
 CLEAN=false
-if [ "$1" = "--clean" ]; then
-    CLEAN=true
-    shift
-fi
+SAMPLE_ONLY=""
+NAME=""
 
-# 対象ファイル名
-NAME="$1"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --clean)
+            CLEAN=true
+            shift
+            ;;
+        --sample|--only|-s)
+            shift
+            SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            NAME="$1"
+            shift
+            break
+            ;;
+    esac
+done
+
+if [ -z "$NAME" ] && [ $# -gt 0 ]; then
+    NAME="$1"
+fi
 
 # 引数なし → main.py
 if [ -z "$NAME" ]; then
@@ -31,46 +53,110 @@ if [ ! -f "$PY_FILE" ]; then
     exit 1
 fi
 
-if [ ! -d "$SAMPLE_DIR" ]; then
-    echo "error: samples directory not found."
-    exit 1
-fi
-
 shopt -s nullglob
 OK_ALL=true
+SINGLE=false
 
-for infile in "$SAMPLE_DIR"/*.in; do
-    base="$(basename "${infile%.in}")"
-    outfile="$SAMPLE_DIR/$base.out"
-    tmpfile="$SAMPLE_DIR/$base.tmp"
-    difffile="$FAIL_DIR/$base.diff"
+run_case() {
+    local infile="$1"
+    local outfile="$2"
+    local label="$3"
+    local tmpfile="$4"
+    local difffile="$5"
 
     start=$(date +%s%3N)
     python3 "$PY_FILE" < "$infile" > "$tmpfile"
     end=$(date +%s%3N)
     elapsed=$((end - start))
 
-    if diff -u "$outfile" "$tmpfile" > /dev/null; then
-        echo "[OK]   $base (${elapsed} ms)"
-    else
-        echo "[NG]   $base (${elapsed} ms)"
-        mkdir -p "$FAIL_DIR"
-        diff -u "$outfile" "$tmpfile" | tee "$difffile"
-        OK_ALL=false
+    if $SINGLE; then
+        cat "$infile"
+        echo
+        cat "$tmpfile"
     fi
 
-    rm "$tmpfile"
-done
-
-if $OK_ALL; then
-    echo "=== 全サンプルOK ==="
-    echo "=== コピーします ==="
-    if command -v xclip >/dev/null 2>&1; then
-        xclip -selection clipboard < "$PY_FILE"
-        echo "[Copied] $PY_FILE"
+    if [ -f "$outfile" ]; then
+        if diff -u "$outfile" "$tmpfile" > /dev/null; then
+            echo "[OK]   $label (${elapsed} ms)"
+        else
+            echo "[NG]   $label (${elapsed} ms)"
+            mkdir -p "$FAIL_DIR"
+            diff -u "$outfile" "$tmpfile" | tee "$difffile"
+            OK_ALL=false
+        fi
     else
-        echo "warning: xclip not found; not copied."
+        echo "[RUN]  $label (${elapsed} ms)"
+        if ! $SINGLE; then
+            cat "$tmpfile"
+        fi
+    fi
+
+    rm -f "$tmpfile"
+}
+
+if [ -n "$SAMPLE_ONLY" ]; then
+    SINGLE=true
+    sample_in=""
+
+    if [ -d "$SAMPLE_DIR" ]; then
+        if [ -f "$SAMPLE_DIR/sample-${SAMPLE_ONLY}.in" ]; then
+            sample_in="$SAMPLE_DIR/sample-${SAMPLE_ONLY}.in"
+        else
+            matches=("$SAMPLE_DIR"/*-"$SAMPLE_ONLY".in)
+            if [ "${#matches[@]}" -ge 1 ]; then
+                sample_in="${matches[0]}"
+            fi
+        fi
+    fi
+
+    if [ -n "$sample_in" ]; then
+        base="$(basename "${sample_in%.in}")"
+        outfile="${sample_in%.in}.out"
+        tmpfile="$SAMPLE_DIR/$base.tmp"
+        difffile="$FAIL_DIR/$base.diff"
+        run_case "$sample_in" "$outfile" "$base" "$tmpfile" "$difffile"
+    else
+        if [ ! -f "./in.txt" ]; then
+            echo "error: sample $SAMPLE_ONLY not found and in.txt not found."
+            exit 1
+        fi
+        run_case "in.txt" "out.txt" "in.txt" "in.tmp" "$FAIL_DIR/in.diff"
     fi
 else
-    echo "=== 一部NG ==="
+    if [ ! -d "$SAMPLE_DIR" ]; then
+        echo "error: samples directory not found."
+        exit 1
+    fi
+
+    for infile in "$SAMPLE_DIR"/*.in; do
+        base="$(basename "${infile%.in}")"
+        outfile="$SAMPLE_DIR/$base.out"
+        tmpfile="$SAMPLE_DIR/$base.tmp"
+        difffile="$FAIL_DIR/$base.diff"
+        run_case "$infile" "$outfile" "$base" "$tmpfile" "$difffile"
+    done
+fi
+
+if $OK_ALL; then
+    if $SINGLE; then
+        :
+    else
+        echo "=== 全サンプルOK ==="
+        echo "=== コピーします ==="
+        if command -v xclip >/dev/null 2>&1; then
+            xclip -selection clipboard < "$PY_FILE"
+            echo "[Copied] $PY_FILE"
+        else
+            echo "warning: xclip not found; not copied."
+        fi
+        if [ -d "$FAIL_DIR" ]; then
+            rm -rf "$FAIL_DIR"
+        fi
+    fi
+else
+    if $SINGLE; then
+        :
+    else
+        echo "=== 一部NG ==="
+    fi
 fi
