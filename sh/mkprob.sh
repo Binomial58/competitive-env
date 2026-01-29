@@ -62,7 +62,7 @@ namespace fastio
     template <size_t I = 0, class... Ts>
     inline enable_if_t<I == sizeof...(Ts)> wt_tuple(const tuple<Ts...> &) {}
     template <size_t I = 0, class... Ts>
-        inline enable_if_t<I < sizeof...(Ts)> wt_tuple(const tuple<Ts...> &t)
+        inline enable_if_t < I<sizeof...(Ts)> wt_tuple(const tuple<Ts...> &t)
     {
         if (I)
             cout << ' ';
@@ -186,6 +186,18 @@ namespace fastio
 } // namespace fastio
 
 using fastio::print;
+
+template <class T>
+int bisect_left(const vector<T> &v, const T &x)
+{
+    return int(lower_bound(v.begin(), v.end(), x) - v.begin());
+}
+
+template <class T>
+int bisect_right(const vector<T> &v, const T &x)
+{
+    return int(upper_bound(v.begin(), v.end(), x) - v.begin());
+}
 
 int main()
 {
