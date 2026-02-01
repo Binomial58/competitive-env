@@ -12,14 +12,14 @@
 
 ### 1) Includes と using
 
-```
+```cpp
 #include <bits/stdc++.h>
 using namespace std;
 ```
 
 ### 2) 型エイリアス
 
-```
+```cpp
 using ll = long long;
 using u32 = uint32_t;
 using u64 = uint64_t;
@@ -27,7 +27,7 @@ using u64 = uint64_t;
 
 ### 3) ループ系マクロ
 
-```
+```cpp
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
 #define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
@@ -35,7 +35,7 @@ using u64 = uint64_t;
 
 ### 4) 定数
 
-```
+```cpp
 const int INF = (1 << 30);
 const ll INFLL = (1LL << 62);
 const ll MOD = 998244353;
@@ -62,7 +62,7 @@ const ll MOD2 = 1000000007;
 
 可変引数でまとめて入力可能:
 
-```
+```cpp
 int a; string s; 
 fastio::read(a, s);
 ```
@@ -71,7 +71,7 @@ fastio::read(a, s);
 
 `print` は引数を空白区切りで出力し、最後に改行を出力します。
 
-```
+```cpp
 fastio::print(a, b, c); // "a b c\n"
 ```
 
@@ -91,7 +91,7 @@ fastio::print(a, b, c); // "a b c\n"
 
 宣言と `read` を一度に行うマクロです。
 
-```
+```cpp
 #define INT(...)  int __VA_ARGS__; read(__VA_ARGS__)
 #define LL(...)   ll __VA_ARGS__; read(__VA_ARGS__)
 #define U32(...)  u32 __VA_ARGS__; read(__VA_ARGS__)
@@ -108,7 +108,7 @@ fastio::print(a, b, c); // "a b c\n"
 
 ### 7) 補助関数
 
-```
+```cpp
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
 
@@ -121,7 +121,7 @@ long long sum(const vector<T> &v)
 
 ### 8) main の雛形
 
-```
+```cpp
 int main()
 {
     // ここにコードを書く
@@ -130,7 +130,7 @@ int main()
 
 ## 使い方例
 
-```
+```cpp
 INT(n);
 VEC(int, a, n);
 LL(x, y);
