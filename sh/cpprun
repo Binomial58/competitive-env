@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE="$(basename "$0")"
+if [[ "$BASE" =~ ^cpprun([0-9]+)$ ]] && [ $# -eq 0 ]; then
+  set -- "${BASH_REMATCH[1]}"
+fi
+
+usage() {
+  echo "usage: cpprun <sample> [source.cpp] [-- args...]" >&2
+  echo "  sample: 0 / 0000 / 0000.txt / samples/0000.txt など" >&2
+  exit 1
+}
+
+if [ $# -lt 1 ]; then
+  usage
+fi
+
+SAMPLES_DIR="samples"
+SAMPLE_ARG="$1"
+shift
+
+SRC_ARG=""
+if [ $# -gt 0 ] && [ "$1" != "--" ]; then
+  if [ -f "$1" ]; then
+    SRC_ARG="$1"
+    shift
+  elif [ -f "$1.cpp" ]; then
+    SRC_ARG="$1.cpp"
+    shift
+  fi
+fi
+
+if [ $# -gt 0 ] && [ "$1" = "--" ]; then
+  shift
+fi
+EXTRA_ARGS=("$@")
+
+resolve_sample() {
+  local arg="$1"
+  if [ -f "$arg" ]; then
+    echo "$arg"
+    return 0
+  fi
+
+  local name="${arg%.txt}"
+
+  if [ -d "$SAMPLES_DIR" ]; then
+    if [[ "$name" =~ ^[0-9]+$ ]]; then
+      local pad4
+      pad4=$(printf "%04d" "$name")
+      if [ -f "$SAMPLES_DIR/$pad4.txt" ]; then
+        echo "$SAMPLES_DIR/$pad4.txt"
+        return 0
+      fi
+      if [ -f "$SAMPLES_DIR/$name.txt" ]; then
+        echo "$SAMPLES_DIR/$name.txt"
+        return 0
+      fi
+    fi
+
+    local match
+    match=$(compgen -G "$SAMPLES_DIR/*$name*.txt" | head -n 1 || true)
+    if [ -n "$match" ]; then
+      echo "$match"
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+resolve_source() {
+  if [ -n "$SRC_ARG" ]; then
+    echo "$SRC_ARG"
+    return 0
+  fi
+
+  local base
+  base=$(basename "$PWD")
+  if [ -f "$base.cpp" ]; then
+    echo "$base.cpp"
+    return 0
+  fi
+
+  shopt -s nullglob
+  local cpp_files=(*.cpp)
+  if [ ${#cpp_files[@]} -eq 1 ]; then
+    echo "${cpp_files[0]}"
+    return 0
+  fi
+  if [ -f "main.cpp" ]; then
+    echo "main.cpp"
+    return 0
+  fi
+
+  if [ ${#cpp_files[@]} -gt 1 ]; then
+    echo "error: multiple .cpp files found, specify one." >&2
+  else
+    echo "error: .cpp file not found." >&2
+  fi
+  exit 1
+}
+
+INPUT_FILE=$(resolve_sample "$SAMPLE_ARG" || true)
+if [ -z "$INPUT_FILE" ]; then
+  echo "error: sample not found for '$SAMPLE_ARG'." >&2
+  exit 1
+fi
+
+SRC_FILE=$(resolve_source)
+SRC_BASE="${SRC_FILE%.cpp}"
+SRC_DIR=$(cd "$(dirname "$SRC_FILE")" && pwd)
+OUT_FILE="$SRC_DIR/out.txt"
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+BUILD_SH="$SCRIPT_DIR/build.sh"
+
+if [ ! -f "./a.out" ] || [ "$SRC_FILE" -nt "./a.out" ]; then
+  if [ -x "$BUILD_SH" ]; then
+    "$BUILD_SH" "$SRC_BASE"
+  else
+    g++ -std=gnu++20 -O2 -pipe "$SRC_FILE" -o a.out
+  fi
+fi
+
+./a.out "${EXTRA_ARGS[@]}" < "$INPUT_FILE" > "$OUT_FILE"
