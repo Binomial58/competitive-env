@@ -41,6 +41,11 @@ using u64 = uint64_t;
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
 #define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
 
+const int INF = (1 << 30);
+const ll INFLL = (1LL << 62);
+const ll MOD = 998244353;
+const ll MOD2 = 1000000007;
+
 namespace fastio
 {
     // 入力

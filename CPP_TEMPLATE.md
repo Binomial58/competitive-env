@@ -10,7 +10,7 @@
 
 ## テンプレート内容（概要）
 
-### 1) インクルードと using
+### 1) Includes と using
 
 ```
 #include <bits/stdc++.h>
@@ -33,7 +33,20 @@ using u64 = uint64_t;
 #define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
 ```
 
-### 4) fastio 名前空間（入出力ユーティリティ）
+### 4) 定数
+
+```
+const int INF = (1 << 30);
+const ll INFLL = (1LL << 62);
+const ll MOD = 998244353;
+const ll MOD2 = 1000000007;
+```
+
+用途の目安:
+- `INF` / `INFLL`: 最短路や DP の初期値に使う「十分大きい値」
+- `MOD` / `MOD2`: 剰余演算用（問題で指定された MOD を使う）
+
+### 5) fastio 名前空間（入出力ユーティリティ）
 
 #### 入力: `read`
 
@@ -74,7 +87,7 @@ fastio::print(a, b, c); // "a b c\n"
 - `set` / `multiset` / `unordered_set`
 - `map` / `unordered_map`
 
-### 5) 入力ショートカットマクロ
+### 6) 入力ショートカットマクロ
 
 宣言と `read` を一度に行うマクロです。
 
@@ -93,7 +106,7 @@ fastio::print(a, b, c); // "a b c\n"
 注意:
 - 複数文に展開されるため、`if` 直下で使う場合は必ず `{}` を付けるのが安全です。
 
-### 6) 補助関数
+### 7) 補助関数
 
 ```
 template <class T>
@@ -106,7 +119,7 @@ template <class T>
 long long sum(const vector<T> &v)
 ```
 
-### 7) main の雛形
+### 8) main の雛形
 
 ```
 int main()
