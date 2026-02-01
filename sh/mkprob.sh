@@ -34,6 +34,8 @@ case "$LANG" in
 using namespace std;
 
 using ll = long long;
+using u32 = uint32_t;
+using u64 = uint64_t;
 
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
@@ -41,6 +43,55 @@ using ll = long long;
 
 namespace fastio
 {
+    // 入力
+    template <class T>
+    void read(T &x) { cin >> x; }
+
+    template <class A, class B>
+    void read(pair<A, B> &p)
+    {
+        read(p.first);
+        read(p.second);
+    }
+
+    template <size_t I = 0, class... Ts>
+    inline enable_if_t<I == sizeof...(Ts)> read_tuple(tuple<Ts...> &) {}
+    template <size_t I = 0, class... Ts>
+        inline enable_if_t < I<sizeof...(Ts)> read_tuple(tuple<Ts...> &t)
+    {
+        read(get<I>(t));
+        read_tuple<I + 1>(t);
+    }
+    template <class... Ts>
+    void read(tuple<Ts...> &t) { read_tuple(t); }
+
+    template <class T, size_t N>
+    void read(array<T, N> &a)
+    {
+        for (auto &x : a)
+            read(x);
+    }
+    template <class T>
+    void read(vector<T> &v)
+    {
+        for (auto &x : v)
+            read(x);
+    }
+    template <class T>
+    void read(deque<T> &v)
+    {
+        for (auto &x : v)
+            read(x);
+    }
+
+    template <class Head, class... Tail>
+    void read(Head &head, Tail &...tail)
+    {
+        read(head);
+        if constexpr (sizeof...(Tail))
+            read(tail...);
+    }
+
     // 基本型
     template <class T>
     void wt(const T &x) { cout << x; }
@@ -186,6 +237,35 @@ namespace fastio
 } // namespace fastio
 
 using fastio::print;
+using fastio::read;
+
+#define INT(...)   \
+    int __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define LL(...)   \
+    ll __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define U32(...)   \
+    u32 __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define U64(...)   \
+    u64 __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define STR(...)      \
+    string __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define CHAR(...)   \
+    char __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define DBL(...)      \
+    double __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define VEC(type, name, size) \
+    vector<type> name(size);    \
+    read(name)
+#define VV(type, name, h, w)                     \
+    vector<vector<type>> name(h, vector<type>(w)); \
+    read(name)
 
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
