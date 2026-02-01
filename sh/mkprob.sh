@@ -199,6 +199,12 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
+template <class T>
+long long sum(const vector<T> &v)
+{
+    return accumulate(v.begin(), v.end(), 0LL);
+}
+
 int main()
 {
     // ここにコードを書く
