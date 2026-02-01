@@ -41,6 +41,10 @@ using u64 = uint64_t;
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
 #define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
 
+#define all(v) (v).begin(), (v).end()
+#define MIN(v) *min_element(all(v))
+#define MAX(v) *max_element(all(v))
+
 const int INF = (1 << 30);
 const ll INFLL = (1LL << 62);
 const ll MOD = 998244353;

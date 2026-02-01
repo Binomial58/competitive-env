@@ -31,6 +31,9 @@ using u64 = uint64_t;
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
 #define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
+#define all(v) (v).begin(), (v).end()
+#define MIN(v) *min_element(all(v))
+#define MAX(v) *max_element(all(v))
 ```
 
 ### 4) 定数
