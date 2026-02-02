@@ -118,6 +118,8 @@ int bisect_left(const vector<T> &v, const T &x)
 template <class T>
 int bisect_right(const vector<T> &v, const T &x)
 
+long long ipow(long long a, long long e)
+
 template <class T>
 long long sum(const vector<T> &v)
 ```

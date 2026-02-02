@@ -288,6 +288,19 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
+long long ipow(long long a, long long e)
+{
+    long long r = 1;
+    while (e > 0)
+    {
+        if (e & 1)
+            r *= a;
+        a *= a;
+        e >>= 1;
+    }
+    return r;
+}
+
 template <class T>
 long long sum(const vector<T> &v)
 {
