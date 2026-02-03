@@ -19,13 +19,13 @@ fi
 if [ -f "$NAME.cpp" ]; then
     "$SCRIPT_DIR/build.sh" "$NAME" || exit 1
     if [ -x "$SCRIPT_DIR/ioall.sh" ]; then
-        "$SCRIPT_DIR/ioall.sh"
+        "$SCRIPT_DIR/ioall.sh" --nodiff
     else
-        "$SCRIPT_DIR/ioall"
+        "$SCRIPT_DIR/ioall" --nodiff
     fi
 
 elif [ -f "$NAME.py" ]; then
-    "$SCRIPT_DIR/pyall.sh" "$NAME"
+    "$SCRIPT_DIR/pyall.sh" --nodiff "$NAME"
 
 else
     echo "error: $NAME.cpp or $NAME.py not found."

@@ -5,11 +5,16 @@ FAIL_DIR="failures"
 
 CLEAN=false
 SAMPLE_ONLY=""
+NO_DIFF=false
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --clean)
             CLEAN=true
+            shift
+            ;;
+        --nodiff)
+            NO_DIFF=true
             shift
             ;;
         --sample|--only|-s)
@@ -36,6 +41,7 @@ fi
 shopt -s nullglob
 OK_ALL=true
 SINGLE=false
+HAD_RE=false
 
 run_case() {
     local infile="$1"
@@ -46,8 +52,17 @@ run_case() {
 
     start=$(date +%s%3N)
     ./a.out < "$infile" > "$tmpfile"
+    status=$?
     end=$(date +%s%3N)
     elapsed=$((end - start))
+
+    if [ $status -ne 0 ]; then
+        echo "[RE]   $label (${elapsed} ms)"
+        HAD_RE=true
+        OK_ALL=false
+        rm -f "$tmpfile"
+        return
+    fi
 
     if $SINGLE; then
         cat "$infile"
@@ -58,11 +73,15 @@ run_case() {
 
     if [ -f "$outfile" ]; then
         if diff -u "$outfile" "$tmpfile" > /dev/null; then
-            echo "[OK]   $label (${elapsed} ms)"
+            echo "[AC]   $label (${elapsed} ms)"
         else
-            echo "[NG]   $label (${elapsed} ms)"
+            echo "[WA]   $label (${elapsed} ms)"
             mkdir -p "$FAIL_DIR"
-            diff -u "$outfile" "$tmpfile" | tee "$difffile"
+            if $NO_DIFF; then
+                diff -u "$outfile" "$tmpfile" > "$difffile"
+            else
+                diff -u "$outfile" "$tmpfile" | tee "$difffile"
+            fi
             OK_ALL=false
         fi
     else
@@ -122,7 +141,7 @@ if $OK_ALL; then
     if $SINGLE; then
         :
     else
-        echo "=== 全サンプルOK ==="
+        echo "=== 全サンプルAC ==="
         if [ -d "$FAIL_DIR" ]; then
             rm -rf "$FAIL_DIR"
         fi
@@ -131,6 +150,16 @@ else
     if $SINGLE; then
         :
     else
-        echo "=== 一部NG ==="
+        if $HAD_RE; then
+            echo "=== 一部RE ==="
+        else
+            echo "=== 一部WA ==="
+        fi
     fi
+fi
+
+if $OK_ALL; then
+    exit 0
+else
+    exit 1
 fi

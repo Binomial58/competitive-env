@@ -4,11 +4,16 @@
 CLEAN=false
 SAMPLE_ONLY=""
 NAME=""
+NO_DIFF=false
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --clean)
             CLEAN=true
+            shift
+            ;;
+        --nodiff)
+            NO_DIFF=true
             shift
             ;;
         --sample|--only|-s)
@@ -77,11 +82,15 @@ run_case() {
 
     if [ -f "$outfile" ]; then
         if diff -u "$outfile" "$tmpfile" > /dev/null; then
-            echo "[OK]   $label (${elapsed} ms)"
+            echo "[AC]   $label (${elapsed} ms)"
         else
-            echo "[NG]   $label (${elapsed} ms)"
+            echo "[WA]   $label (${elapsed} ms)"
             mkdir -p "$FAIL_DIR"
-            diff -u "$outfile" "$tmpfile" | tee "$difffile"
+            if $NO_DIFF; then
+                diff -u "$outfile" "$tmpfile" > "$difffile"
+            else
+                diff -u "$outfile" "$tmpfile" | tee "$difffile"
+            fi
             OK_ALL=false
         fi
     else
@@ -141,7 +150,7 @@ if $OK_ALL; then
     if $SINGLE; then
         :
     else
-        echo "=== 全サンプルOK ==="
+        echo "=== 全サンプルAC ==="
         echo "=== コピーします ==="
         if command -v xclip >/dev/null 2>&1; then
             xclip -selection clipboard < "$PY_FILE"
@@ -157,6 +166,12 @@ else
     if $SINGLE; then
         :
     else
-        echo "=== 一部NG ==="
+        echo "=== 一部WA ==="
     fi
+fi
+
+if $OK_ALL; then
+    exit 0
+else
+    exit 1
 fi
