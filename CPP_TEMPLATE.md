@@ -30,7 +30,9 @@ using u64 = uint64_t;
 ```cpp
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
-#define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
+#define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
+#define srep(i, a, b, step) \
+    for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
 #define all(v) (v).begin(), (v).end()
 #define MIN(v) *min_element(all(v))
 #define MAX(v) *max_element(all(v))
@@ -119,6 +121,19 @@ template <class T>
 int bisect_right(const vector<T> &v, const T &x)
 
 long long ipow(long long a, long long e)
+
+template <class It>
+string join(It first, It last, const string &sep)
+
+string join(const vector<string> &v, const string &sep)
+
+string join(const string &s, const string &sep)
+
+template <class C>
+string join(const C &c, const string &sep)
+
+template <class C>
+C reversed(C c)
 
 template <class T>
 long long sum(const vector<T> &v)

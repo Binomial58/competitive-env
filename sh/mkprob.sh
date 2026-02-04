@@ -39,7 +39,9 @@ using u64 = uint64_t;
 
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
-#define rrep(i, a, b) for (int i = (int)(a); i >= (int)(b); i--)
+#define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
+#define srep(i, a, b, step) \
+    for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
 
 #define all(v) (v).begin(), (v).end()
 #define MIN(v) *min_element(all(v))
@@ -299,6 +301,68 @@ long long ipow(long long a, long long e)
         e >>= 1;
     }
     return r;
+}
+
+template <class It>
+string join(It first, It last, const string &sep)
+{
+    ostringstream oss;
+    bool first_elem = true;
+    for (auto it = first; it != last; ++it)
+    {
+        if (!first_elem)
+            oss << sep;
+        first_elem = false;
+        oss << *it;
+    }
+    return oss.str();
+}
+
+inline string join(const vector<string> &v, const string &sep)
+{
+    size_t total = 0;
+    if (!v.empty())
+        total = (v.size() - 1) * sep.size();
+    for (const auto &s : v)
+        total += s.size();
+    string res;
+    res.reserve(total);
+    for (size_t i = 0; i < v.size(); ++i)
+    {
+        if (i)
+            res += sep;
+        res += v[i];
+    }
+    return res;
+}
+
+inline string join(const string &s, const string &sep)
+{
+    if (s.empty())
+        return "";
+    string res;
+    if (!sep.empty())
+        res.reserve(s.size() + (s.size() - 1) * sep.size());
+    for (size_t i = 0; i < s.size(); ++i)
+    {
+        if (i)
+            res += sep;
+        res += s[i];
+    }
+    return res;
+}
+
+template <class C>
+string join(const C &c, const string &sep)
+{
+    return join(c.begin(), c.end(), sep);
+}
+
+template <class C>
+C reversed(C c)
+{
+    reverse(c.begin(), c.end());
+    return c;
 }
 
 template <class T>
