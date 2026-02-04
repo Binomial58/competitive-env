@@ -80,7 +80,7 @@ fastio::read(a, s);
 fastio::print(a, b, c); // "a b c\n"
 ```
 
-対応型:
+対応型（小数は自動で高精度出力）:
 
 - 基本型
 - `string` / `const char*`

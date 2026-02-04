@@ -107,6 +107,11 @@ namespace fastio
     template <class T>
     void wt(const T &x) { cout << x; }
 
+    // 小数は十分な桁数で出力
+    inline void wt(float x) { cout << setprecision(15) << x; }
+    inline void wt(double x) { cout << setprecision(15) << x; }
+    inline void wt(long double x) { cout << setprecision(20) << x; }
+
     // 文字列系
     inline void wt(const char *s) { cout << s; }
     inline void wt(const string &s) { cout << s; }
