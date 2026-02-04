@@ -87,7 +87,7 @@ fastio::print(a, b, c); // "a b c\n"
 - `pair`
 - `tuple`
 - `array`
-- `vector`
+- `vector`（`vector<vector<T>>` は行ごとに改行）
 - `deque`
 - `set` / `multiset` / `unordered_set`
 - `map` / `unordered_map`
