@@ -260,6 +260,10 @@ using fastio::read;
 #define VV(type, name, h, w)                     \
     vector<vector<type>> name(h, vector<type>(w)); \
     read(name)
+#define VEC0(type, name, size) \
+    vector<type> name(size)
+#define VV0(type, name, h, w)                     \
+    vector<vector<type>> name(h, vector<type>(w))
 
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)

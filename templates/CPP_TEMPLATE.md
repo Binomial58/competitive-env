@@ -106,6 +106,8 @@ fastio::print(a, b, c); // "a b c\n"
 #define DBL(...)  double __VA_ARGS__; read(__VA_ARGS__)
 #define VEC(type, name, size) vector<type> name(size); read(name)
 #define VV(type, name, h, w) vector<vector<type>> name(h, vector<type>(w)); read(name)
+#define VEC0(type, name, size) vector<type> name(size)
+#define VV0(type, name, h, w) vector<vector<type>> name(h, vector<type>(w))
 ```
 
 注意:
