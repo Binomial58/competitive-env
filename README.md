@@ -271,6 +271,22 @@ g++ -std=gnu++20 -O2 -pipe -DLOCAL a.cpp
 
 ---
 
+# C++ テンプレ：Graph（無向・重み無し）
+
+`templates/cpp_template.cpp` には無向・重み無しの `Graph` 構造体を用意してある。  
+隣接リストは `vector<vector<int>>` で保持する。
+
+例:
+```cpp
+Graph G(n);
+G.add_edge(u, v);   // 無向（デフォルト）
+for (int to : G[u]) {
+    // ...
+}
+```
+
+---
+
 # トラブルシューティング
 
 - **`main.cpp` / `main.py` が見つからない**

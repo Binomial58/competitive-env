@@ -141,7 +141,22 @@ template <class T>
 long long sum(const vector<T> &v)
 ```
 
-### 8) main の雛形
+### 8) Graph（無向・重み無し）
+
+隣接リストは `vector<vector<int>>` で保持します。  
+`add_edge(u, v)` は無向（両方向に追加）がデフォルトです。
+
+```cpp
+Graph G(n);
+G.add_edge(u, v);        // 無向（デフォルト）
+G.add_edge(u, v, false); // 有向にしたい場合
+
+for (int to : G[u]) {
+    // ...
+}
+```
+
+### 9) main の雛形
 
 ```cpp
 int main()

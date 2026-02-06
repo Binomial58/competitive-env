@@ -560,6 +560,24 @@ long long sum(const vector<T> &v)
     return accumulate(v.begin(), v.end(), 0LL);
 }
 
+struct Graph
+{
+    int n;
+    vector<vector<int>> g;
+
+    Graph(int n = 0) : n(n), g(n) {}
+
+    void add_edge(int u, int v, bool undirected = true)
+    {
+        g[u].push_back(v);
+        if (undirected)
+            g[v].push_back(u);
+    }
+
+    vector<int> &operator[](int i) { return g[i]; }
+    const vector<int> &operator[](int i) const { return g[i]; }
+};
+
 int main()
 {
     // ここにコードを書く
