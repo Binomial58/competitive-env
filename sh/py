@@ -1,0 +1,64 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+    echo "usage: py [sample_number] [source_name]" >&2
+    echo "       py [--sample N] [source_name]" >&2
+    exit 1
+}
+
+SAMPLE_ONLY=""
+SOURCE_ARG=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --sample|--only|-s)
+            shift
+            [ $# -gt 0 ] || usage
+            SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --help|-h)
+            usage
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            if [[ "$1" =~ ^py([0-9]{1,3})$ ]] && [ -z "$SAMPLE_ONLY" ]; then
+                SAMPLE_ONLY="${BASH_REMATCH[1]}"
+            elif [[ "$1" =~ ^[0-9]{1,3}$ ]] && [ -z "$SAMPLE_ONLY" ]; then
+                SAMPLE_ONLY="$1"
+            elif [ -z "$SOURCE_ARG" ]; then
+                SOURCE_ARG="$1"
+            else
+                usage
+            fi
+            shift
+            ;;
+    esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ -n "$SAMPLE_ONLY" ] && ! [[ "$SAMPLE_ONLY" =~ ^[0-9]{1,3}$ ]]; then
+    echo "error: sample must be 0..999." >&2
+    exit 1
+fi
+
+if [ -n "$SAMPLE_ONLY" ]; then
+    if [ -n "$SOURCE_ARG" ]; then
+        exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$SOURCE_ARG"
+    else
+        exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY"
+    fi
+else
+    if [ -n "$SOURCE_ARG" ]; then
+        exec "$SCRIPT_DIR/pyrun" "$SOURCE_ARG"
+    else
+        exec "$SCRIPT_DIR/pyrun"
+    fi
+fi

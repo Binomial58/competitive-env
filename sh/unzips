@@ -1,0 +1,195 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    echo "usage: unzips [--keep] [zip_file ...]" >&2
+    echo "  no args: unzip all *.zip in current directory" >&2
+    echo "  extracted files are placed into samples/ directory" >&2
+    echo "  default: remove zip files after successful extraction" >&2
+    echo "  --keep: keep zip files" >&2
+    exit 1
+}
+
+if ! command -v unzip >/dev/null 2>&1; then
+    echo "error: unzip command not found." >&2
+    exit 1
+fi
+
+REMOVE_ZIP=true
+ZIP_ARGS=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --keep)
+            REMOVE_ZIP=false
+            shift
+            ;;
+        --rm)
+            REMOVE_ZIP=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            ;;
+        --)
+            shift
+            while [ $# -gt 0 ]; do
+                ZIP_ARGS+=("$1")
+                shift
+            done
+            ;;
+        *)
+            ZIP_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+shopt -s nullglob
+if [ "${#ZIP_ARGS[@]}" -eq 0 ]; then
+    ZIP_ARGS=( *.zip *.ZIP )
+fi
+
+# contest root (e.g. ARC158/) で実行したときに
+# 各問題ディレクトリ配下の zip も拾えるようにする
+if [ "${#ZIP_ARGS[@]}" -eq 0 ]; then
+    ZIP_ARGS=( */*.zip */*.ZIP )
+fi
+
+if [ "${#ZIP_ARGS[@]}" -eq 0 ]; then
+    echo "error: no zip files found." >&2
+    exit 1
+fi
+
+hash_pair() {
+    local in_file="$1"
+    local out_file="$2"
+    local sum_cmd=""
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        sum_cmd="sha256sum"
+    elif command -v shasum >/dev/null 2>&1; then
+        sum_cmd="shasum -a 256"
+    else
+        sum_cmd="cksum"
+    fi
+
+    if [ -f "$out_file" ]; then
+        { cat "$in_file"; printf '\n__SEP__\n'; cat "$out_file"; } | eval "$sum_cmd" | awk '{print $1}'
+    else
+        { cat "$in_file"; printf '\n__SEP__\n__NO_OUT__\n'; } | eval "$sum_cmd" | awk '{print $1}'
+    fi
+}
+
+dedup_samples_dir() {
+    local samples_dir="$1"
+    [ -d "$samples_dir" ] || return 0
+
+    shopt -s nullglob
+    local infiles=( "$samples_dir"/*.in )
+    [ "${#infiles[@]}" -gt 0 ] || return 0
+
+    local meta_file
+    meta_file="$(mktemp)"
+    local infile outfile base num hash
+
+    for infile in "${infiles[@]}"; do
+        base="$(basename "${infile%.in}")"
+        if [[ "$base" =~ -([0-9]+)$ ]]; then
+            num=$((10#${BASH_REMATCH[1]}))
+        else
+            continue
+        fi
+        outfile="${infile%.in}.out"
+        hash="$(hash_pair "$infile" "$outfile")"
+        printf "%010d\t%s\t%s\t%s\n" "$num" "$hash" "$infile" "$outfile" >> "$meta_file"
+    done
+
+    if [ ! -s "$meta_file" ]; then
+        rm -f "$meta_file"
+        return 0
+    fi
+
+    declare -A seen_hash=()
+    local _num _hash _in _out
+    while IFS=$'\t' read -r _num _hash _in _out; do
+        if [ -n "${seen_hash[$_hash]:-}" ]; then
+            rm -f "$_in"
+            if [ -f "$_out" ]; then
+                rm -f "$_out"
+            fi
+            echo "[DEDUP] removed duplicate: ${_in#$samples_dir/}"
+        else
+            seen_hash[$_hash]=1
+        fi
+    done < <(sort -t $'\t' -k2,2 -k1,1n -k3,3 "$meta_file")
+
+    rm -f "$meta_file"
+}
+
+find_sample_input_by_number() {
+    local samples_dir="$1"
+    local target_num="$2"
+    shopt -s nullglob
+    local infile base num_str num
+    for infile in "$samples_dir"/*.in; do
+        base="$(basename "${infile%.in}")"
+        if [[ "$base" =~ -([0-9]+)$ ]]; then
+            num_str="${BASH_REMATCH[1]}"
+            num=$((10#$num_str))
+            if [ "$num" -eq "$target_num" ]; then
+                echo "$infile"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+overwrite_io_from_sample0() {
+    local samples_dir="$1"
+    local target_dir="$2"
+    local in0 out0
+
+    in0="$(find_sample_input_by_number "$samples_dir" 0 || true)"
+    if [ -z "$in0" ]; then
+        echo "warning: sample-0 not found in $samples_dir; skip in.txt/out.txt update." >&2
+        return 0
+    fi
+
+    out0="${in0%.in}.out"
+    if [ ! -f "$out0" ]; then
+        echo "warning: sample-0.out not found for $in0; skip in.txt/out.txt update." >&2
+        return 0
+    fi
+
+    cp "$in0" "$target_dir/in.txt"
+    cp "$out0" "$target_dir/out.txt"
+    echo "[SET] $target_dir/in.txt $target_dir/out.txt <- $(basename "${in0%.in}")"
+}
+
+for zipf in "${ZIP_ARGS[@]}"; do
+    if [ ! -f "$zipf" ]; then
+        echo "warning: skip (not found): $zipf" >&2
+        continue
+    fi
+
+    target_dir="."
+    if [[ "$zipf" == */* ]]; then
+        dest="$(dirname "$zipf")/samples"
+        target_dir="$(dirname "$zipf")"
+    else
+        dest="samples"
+    fi
+    mkdir -p "$dest"
+
+    unzip -o "$zipf" -d "$dest" >/dev/null
+    echo "[OK] $zipf -> $dest/"
+    dedup_samples_dir "$dest"
+    overwrite_io_from_sample0 "$dest" "$target_dir"
+
+    if $REMOVE_ZIP; then
+        rm -f "$zipf"
+        echo "[RM] $zipf"
+    fi
+done

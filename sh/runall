@@ -1,33 +1,113 @@
 #!/bin/bash
-
-# runall
-# C++: build + ioall
-# Python: pyall
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ $# -eq 0 ]; then
-    # 引数なしの場合はカレントディレクトリ名を使う
-    NAME="$(basename "$PWD")"
-else
-    ARG="$1"
-    # 拡張子を除去
-    NAME="${ARG%.cpp}"
-    NAME="${NAME%.py}"
-fi
+usage() {
+    echo "usage: runall [source_name]" >&2
+    exit 1
+}
 
-if [ -f "$NAME.cpp" ]; then
-    "$SCRIPT_DIR/build.sh" "$NAME" || exit 1
-    if [ -x "$SCRIPT_DIR/ioall.sh" ]; then
-        "$SCRIPT_DIR/ioall.sh" --nodiff
-    else
-        "$SCRIPT_DIR/ioall" --nodiff
+resolve_target() {
+    local arg="${1:-}"
+    local base=""
+    local prefer=""
+
+    if [ -n "$arg" ]; then
+        case "$arg" in
+            *.cpp) prefer="cpp" ;;
+            *.py)  prefer="py" ;;
+        esac
+        base="${arg%.cpp}"
+        base="${base%.py}"
+
+        local cpp="$base.cpp"
+        local py="$base.py"
+
+        if [ "$prefer" = "cpp" ]; then
+            [ -f "$cpp" ] || { echo "error: $cpp not found." >&2; return 1; }
+            echo "$cpp"
+            return 0
+        fi
+        if [ "$prefer" = "py" ]; then
+            [ -f "$py" ] || { echo "error: $py not found." >&2; return 1; }
+            echo "$py"
+            return 0
+        fi
+
+        if [ -f "$cpp" ] && [ ! -f "$py" ]; then
+            echo "$cpp"
+            return 0
+        fi
+        if [ -f "$py" ] && [ ! -f "$cpp" ]; then
+            echo "$py"
+            return 0
+        fi
+        if [ -f "$cpp" ] && [ -f "$py" ]; then
+            echo "error: both $cpp and $py exist. specify extension." >&2
+            return 1
+        fi
+
+        echo "error: $cpp or $py not found." >&2
+        return 1
     fi
 
-elif [ -f "$NAME.py" ]; then
-    "$SCRIPT_DIR/pyall.sh" --nodiff "$NAME"
+    local dir_name
+    dir_name="$(basename "$PWD")"
+    local dir_cpp="$dir_name.cpp"
+    local dir_py="$dir_name.py"
+    if [ -f "$dir_cpp" ] && [ ! -f "$dir_py" ]; then
+        echo "$dir_cpp"
+        return 0
+    fi
+    if [ -f "$dir_py" ] && [ ! -f "$dir_cpp" ]; then
+        echo "$dir_py"
+        return 0
+    fi
+    if [ -f "$dir_cpp" ] && [ -f "$dir_py" ]; then
+        echo "error: both $dir_cpp and $dir_py exist. specify file." >&2
+        return 1
+    fi
 
+    shopt -s nullglob
+    local cpp_files=( *.cpp )
+    local py_files=( *.py )
+    local total=$(( ${#cpp_files[@]} + ${#py_files[@]} ))
+    if [ "$total" -eq 1 ]; then
+        if [ "${#cpp_files[@]}" -eq 1 ]; then
+            echo "${cpp_files[0]}"
+        else
+            echo "${py_files[0]}"
+        fi
+        return 0
+    fi
+    if [ "$total" -eq 0 ]; then
+        echo "error: no target .cpp/.py found." >&2
+    else
+        echo "error: multiple .cpp/.py files found. specify file." >&2
+    fi
+    return 1
+}
+
+[ $# -le 1 ] || usage
+
+SOURCE_ARG="${1:-}"
+TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
+
+if [[ "$TARGET" == *.cpp ]]; then
+    SRC_BASE="${TARGET%.cpp}"
+    "$SCRIPT_DIR/build.sh" "$SRC_BASE"
+    "$SCRIPT_DIR/ioall"
+    echo "=== コピーします ==="
+    if command -v xclip >/dev/null 2>&1; then
+        if xclip -selection clipboard < "$TARGET"; then
+            echo "[Copied] $TARGET"
+        else
+            echo "warning: xclip failed; not copied."
+        fi
+    else
+        echo "warning: xclip not found; not copied."
+    fi
 else
-    echo "error: $NAME.cpp or $NAME.py not found."
-    exit 1
+    "$SCRIPT_DIR/pyall.sh" "$TARGET"
 fi

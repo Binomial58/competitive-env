@@ -1,0 +1,43 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    echo "usage: pyrun [source_name]" >&2
+    exit 1
+}
+
+resolve_py() {
+    local arg="${1:-}"
+    if [ -n "$arg" ]; then
+        local base="${arg%.py}"
+        local py="$base.py"
+        [ -f "$py" ] || { echo "error: $py not found." >&2; return 1; }
+        echo "$py"
+        return 0
+    fi
+
+    local dir_name
+    dir_name="$(basename "$PWD")"
+    if [ -f "$dir_name.py" ]; then
+        echo "$dir_name.py"
+        return 0
+    fi
+
+    shopt -s nullglob
+    local py_files=( *.py )
+    if [ "${#py_files[@]}" -eq 1 ]; then
+        echo "${py_files[0]}"
+        return 0
+    fi
+    if [ "${#py_files[@]}" -eq 0 ]; then
+        echo "error: no target .py found." >&2
+    else
+        echo "error: multiple .py files found. specify file." >&2
+    fi
+    return 1
+}
+
+[ $# -le 1 ] || usage
+
+TARGET="$(resolve_py "${1:-}")" || exit 1
+python3 "$TARGET"

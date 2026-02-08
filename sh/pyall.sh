@@ -37,13 +37,37 @@ if [ -z "$NAME" ] && [ $# -gt 0 ]; then
     NAME="$1"
 fi
 
-# 引数なし → main.py
-if [ -z "$NAME" ]; then
-    PY_FILE="main.py"
-else
-    # .py が付いていたら外す
+if [ -n "$SAMPLE_ONLY" ] && ! [[ "$SAMPLE_ONLY" =~ ^[0-9]{1,3}$ ]]; then
+    echo "error: sample must be 0..999."
+    exit 1
+fi
+
+# 対象ファイルの自動判定:
+# 1) 引数あり: その名前
+# 2) 引数なし: カレントディレクトリ名.py
+# 3) それが無ければ *.py が1つだけならそれを使う
+if [ -n "$NAME" ]; then
     NAME="${NAME%.py}"
     PY_FILE="$NAME.py"
+else
+    DIR_NAME="$(basename "$PWD")"
+    if [ -f "$DIR_NAME.py" ]; then
+        PY_FILE="$DIR_NAME.py"
+    else
+        shopt -s nullglob
+        PY_FILES=( *.py )
+        if [ "${#PY_FILES[@]}" -eq 1 ]; then
+            PY_FILE="${PY_FILES[0]}"
+        elif [ "${#PY_FILES[@]}" -eq 0 ]; then
+            echo "error: no target .py found."
+            echo "hint: create $DIR_NAME.py or run: pyall <name>"
+            exit 1
+        else
+            echo "error: multiple .py files found."
+            echo "hint: run: pyall <name>"
+            exit 1
+        fi
+    fi
 fi
 
 SAMPLE_DIR="samples"
@@ -103,20 +127,34 @@ run_case() {
     rm -f "$tmpfile"
 }
 
-if [ -n "$SAMPLE_ONLY" ]; then
-    SINGLE=true
-    sample_in=""
+resolve_sample_input() {
+    local idx="$1"
+    if [ ! -d "$SAMPLE_DIR" ]; then
+        return 1
+    fi
 
-    if [ -d "$SAMPLE_DIR" ]; then
-        if [ -f "$SAMPLE_DIR/sample-${SAMPLE_ONLY}.in" ]; then
-            sample_in="$SAMPLE_DIR/sample-${SAMPLE_ONLY}.in"
-        else
-            matches=("$SAMPLE_DIR"/*-"$SAMPLE_ONLY".in)
-            if [ "${#matches[@]}" -ge 1 ]; then
-                sample_in="${matches[0]}"
+    if [ -f "$SAMPLE_DIR/sample-${idx}.in" ]; then
+        echo "$SAMPLE_DIR/sample-${idx}.in"
+        return 0
+    fi
+
+    local infile base suffix
+    for infile in "$SAMPLE_DIR"/*.in; do
+        base="$(basename "${infile%.in}")"
+        if [[ "$base" =~ -([0-9]+)$ ]]; then
+            suffix="${BASH_REMATCH[1]}"
+            if [ $((10#$suffix)) -eq $((10#$idx)) ]; then
+                echo "$infile"
+                return 0
             fi
         fi
-    fi
+    done
+    return 1
+}
+
+if [ -n "$SAMPLE_ONLY" ]; then
+    SINGLE=true
+    sample_in="$(resolve_sample_input "$SAMPLE_ONLY" || true)"
 
     if [ -n "$sample_in" ]; then
         base="$(basename "${sample_in%.in}")"
@@ -153,8 +191,11 @@ if $OK_ALL; then
         echo "=== 全サンプルAC ==="
         echo "=== コピーします ==="
         if command -v xclip >/dev/null 2>&1; then
-            xclip -selection clipboard < "$PY_FILE"
-            echo "[Copied] $PY_FILE"
+            if xclip -selection clipboard < "$PY_FILE"; then
+                echo "[Copied] $PY_FILE"
+            else
+                echo "warning: xclip failed; not copied."
+            fi
         else
             echo "warning: xclip not found; not copied."
         fi

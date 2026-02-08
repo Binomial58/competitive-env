@@ -1,30 +1,149 @@
 #!/bin/bash
+set -euo pipefail
 
-# run
-# C++: build + io term
-# Python: run directly
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ $# -eq 0 ]; then
-    echo "usage: run <source_name>"
+usage() {
+    echo "usage: run [sample_number] [source_name]" >&2
+    echo "       run [--sample N] [source_name]" >&2
+    exit 1
+}
+
+resolve_target() {
+    local arg="${1:-}"
+    local base=""
+    local prefer=""
+
+    if [ -n "$arg" ]; then
+        case "$arg" in
+            *.cpp) prefer="cpp" ;;
+            *.py)  prefer="py" ;;
+        esac
+        base="${arg%.cpp}"
+        base="${base%.py}"
+
+        local cpp="$base.cpp"
+        local py="$base.py"
+
+        if [ "$prefer" = "cpp" ]; then
+            [ -f "$cpp" ] || { echo "error: $cpp not found." >&2; return 1; }
+            echo "$cpp"
+            return 0
+        fi
+        if [ "$prefer" = "py" ]; then
+            [ -f "$py" ] || { echo "error: $py not found." >&2; return 1; }
+            echo "$py"
+            return 0
+        fi
+
+        if [ -f "$cpp" ] && [ ! -f "$py" ]; then
+            echo "$cpp"
+            return 0
+        fi
+        if [ -f "$py" ] && [ ! -f "$cpp" ]; then
+            echo "$py"
+            return 0
+        fi
+        if [ -f "$cpp" ] && [ -f "$py" ]; then
+            echo "error: both $cpp and $py exist. specify extension." >&2
+            return 1
+        fi
+
+        echo "error: $cpp or $py not found." >&2
+        return 1
+    fi
+
+    local dir_name
+    dir_name="$(basename "$PWD")"
+    local dir_cpp="$dir_name.cpp"
+    local dir_py="$dir_name.py"
+    if [ -f "$dir_cpp" ] && [ ! -f "$dir_py" ]; then
+        echo "$dir_cpp"
+        return 0
+    fi
+    if [ -f "$dir_py" ] && [ ! -f "$dir_cpp" ]; then
+        echo "$dir_py"
+        return 0
+    fi
+    if [ -f "$dir_cpp" ] && [ -f "$dir_py" ]; then
+        echo "error: both $dir_cpp and $dir_py exist. specify file." >&2
+        return 1
+    fi
+
+    shopt -s nullglob
+    local cpp_files=( *.cpp )
+    local py_files=( *.py )
+    local total=$(( ${#cpp_files[@]} + ${#py_files[@]} ))
+    if [ "$total" -eq 1 ]; then
+        if [ "${#cpp_files[@]}" -eq 1 ]; then
+            echo "${cpp_files[0]}"
+        else
+            echo "${py_files[0]}"
+        fi
+        return 0
+    fi
+    if [ "$total" -eq 0 ]; then
+        echo "error: no target .cpp/.py found." >&2
+    else
+        echo "error: multiple .cpp/.py files found. specify file." >&2
+    fi
+    return 1
+}
+
+SAMPLE_ONLY=""
+
+SOURCE_ARG=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --sample|--only|-s)
+            shift
+            [ $# -gt 0 ] || usage
+            SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --help|-h)
+            usage
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            if [[ "$1" =~ ^run([0-9]{1,3})$ ]] && [ -z "$SAMPLE_ONLY" ]; then
+                SAMPLE_ONLY="${BASH_REMATCH[1]}"
+            elif [[ "$1" =~ ^[0-9]{1,3}$ ]] && [ -z "$SAMPLE_ONLY" ]; then
+                SAMPLE_ONLY="$1"
+            elif [ -z "$SOURCE_ARG" ]; then
+                SOURCE_ARG="$1"
+            else
+                usage
+            fi
+            shift
+            ;;
+    esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ -n "$SAMPLE_ONLY" ] && ! [[ "$SAMPLE_ONLY" =~ ^[0-9]{1,3}$ ]]; then
+    echo "error: sample must be 0..999." >&2
     exit 1
 fi
 
-ARG="$1"
+TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
 
-# 拡張子を除去（.cpp / .py が付いていてもOK）
-NAME="${ARG%.cpp}"
-NAME="${NAME%.py}"
-
-if [ -f "$NAME.cpp" ]; then
-    # C++
-    build.sh "$NAME" || exit 1
-    io.sh term
-
-elif [ -f "$NAME.py" ]; then
-    # Python
-    python3 "$NAME.py"
-
+if [[ "$TARGET" == *.cpp ]]; then
+    SRC_BASE="${TARGET%.cpp}"
+    "$SCRIPT_DIR/build.sh" "$SRC_BASE"
+    if [ -n "$SAMPLE_ONLY" ]; then
+        "$SCRIPT_DIR/ioall" --sample "$SAMPLE_ONLY"
+    else
+        "$SCRIPT_DIR/io" term
+    fi
 else
-    echo "error: $NAME.cpp or $NAME.py not found."
-    exit 1
+    if [ -n "$SAMPLE_ONLY" ]; then
+        "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$TARGET"
+    else
+        python3 "$TARGET"
+    fi
 fi

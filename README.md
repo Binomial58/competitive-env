@@ -13,7 +13,9 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── build.sh    （bd）
     ├── io.sh       （io / io term）
     ├── ioall       （C++ 全サンプル実行）
+    ├── py          （Python 単体/番号実行）
     ├── pyall.sh    （Python 全サンプル実行）
+    ├── pyrun       （Python 単体実行）
     ├── run         （自動判別で単体実行）
     ├── runall      （自動判別で全サンプル実行）
     └── mkprob.sh   （問題テンプレ生成）
@@ -68,7 +70,7 @@ runall a.py
 
 ---
 
-## run0〜run999：サンプル番号指定実行
+## run：サンプル番号指定実行
 
 概要:
 - `samples/` の `sample-<番号>.in/.out` を1件だけ検証
@@ -78,8 +80,9 @@ runall a.py
 
 例:
 ```bash
-run0
-run5
+run 0
+run 5
+run --sample 5
 ```
 
 ---
@@ -138,17 +141,21 @@ pyrun a.py
 
 ---
 
-## py0〜py999：Python サンプル番号指定実行
+## py：Python 実行（単体 / サンプル番号指定）
 
 概要:
+- `py` / `py a` は `pyrun` と同様に Python 単体実行
 - `samples/` の `sample-<番号>.in/.out` を1件だけ検証
 - 該当サンプルが無い場合は `in.txt` を使う（`out.txt` があれば比較）
 - 実行時は **入力 → 空行 → 出力** の順に表示される
 
 例:
 ```bash
-py1
-py5
+py
+py a
+py 1
+py 5
+py --sample 5 a
 ```
 
 ---
