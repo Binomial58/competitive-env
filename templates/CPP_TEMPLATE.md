@@ -1,23 +1,19 @@
-# C++ テンプレート（mkprob 生成）
+# C++ テンプレート仕様（`templates/cpp_template.cpp`）
 
-`sh/mkprob.sh` で `cpp` を指定したときに生成される C++ テンプレートの概要です。
+`sh/mkprob.sh` で `cpp` を指定したときにコピーされるテンプレートの、**現在の実装内容**をまとめたドキュメントです。
 
-## 生成されるファイル
+---
 
-- `<problem>/<problem>.cpp`
-- `<problem>/in.txt`
-- `<problem>/out.txt`
+## 1. 基本構成
 
-## テンプレート内容（概要）
-
-### 1) Includes と using
+### ヘッダ・名前空間
 
 ```cpp
 #include <bits/stdc++.h>
 using namespace std;
 ```
 
-### 2) 型エイリアス
+### 型エイリアス
 
 ```cpp
 using ll = long long;
@@ -25,7 +21,7 @@ using u32 = uint32_t;
 using u64 = uint64_t;
 ```
 
-### 3) ループ系マクロ
+### ループ/汎用マクロ
 
 ```cpp
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
@@ -33,12 +29,13 @@ using u64 = uint64_t;
 #define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
 #define srep(i, a, b, step) \
     for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
+
 #define all(v) (v).begin(), (v).end()
 #define MIN(v) *min_element(all(v))
 #define MAX(v) *max_element(all(v))
 ```
 
-### 4) 定数
+### 定数
 
 ```cpp
 const int INF = (1 << 30);
@@ -47,54 +44,76 @@ const ll MOD = 998244353;
 const ll MOD2 = 1000000007;
 ```
 
-用途の目安:
-- `INF` / `INFLL`: 最短路や DP の初期値に使う「十分大きい値」
-- `MOD` / `MOD2`: 剰余演算用（問題で指定された MOD を使う）
+---
 
-### 5) fastio 名前空間（入出力ユーティリティ）
+## 2. 入出力ユーティリティ（`fastio`）
 
-#### 入力: `read`
+### 入力: `read(...)`
 
-`cin >>` をベースにした入力関数です。  
-以下の型が利用できます（ネストも可）:
+`cin` ベースの入力関数です。可変引数でまとめて読めます。
 
-- 基本型 (`int`, `long long`, `double`, `string` など)
+対応型:
+- 基本型（`int`, `ll`, `double`, `string` など）
 - `pair`
 - `tuple`
 - `array`
 - `vector`
 - `deque`
 
-可変引数でまとめて入力可能:
+例:
 
 ```cpp
-int a; string s; 
-fastio::read(a, s);
+int n;
+ll x;
+string s;
+read(n, x, s);
+
+vector<int> a(n);
+read(a);
 ```
 
-#### 出力: `wt` / `print`
+### 出力: `print(...)`
 
-`print` は引数を空白区切りで出力し、最後に改行を出力します。
+`print(a, b, c)` は空白区切りで出力し、最後に改行します。
 
-```cpp
-fastio::print(a, b, c); // "a b c\n"
-```
-
-対応型（小数は自動で高精度出力）:
-
+内部 `wt(...)` が対応している型:
 - 基本型
-- `string` / `const char*`
-- `pair`
-- `tuple`
-- `array`
-- `vector`（`vector<vector<T>>` は行ごとに改行）
-- `deque`
-- `set` / `multiset` / `unordered_set`
-- `map` / `unordered_map`
+- `string`, `const char*`
+- `pair`, `tuple`
+- `array`, `vector`, `vector<vector<T>>`, `deque`
+- `set`, `multiset`, `unordered_set`
+- `map`, `unordered_map`
 
-### 6) 入力ショートカットマクロ
+小数は自動で高精度表示:
+- `float`, `double`: `setprecision(15)`
+- `long double`: `setprecision(20)`
 
-宣言と `read` を一度に行うマクロです。
+---
+
+## 3. デバッグ出力（`printd`）
+
+`debugio` 名前空間に実装されており、`LOCAL` 定義時だけ有効です。
+
+- `#ifdef LOCAL` のとき: 実際に `cerr` に出力
+- それ以外: 空関数（何も出ない）
+
+特徴:
+- `vector/deque/array` は `[]`
+- `set/multiset/unordered_set` は `{}`
+- `map/unordered_map` は `{key:val,...}`
+- `pair` / `tuple` に対応
+
+例:
+
+```cpp
+printd(a, b, v, st);
+```
+
+---
+
+## 4. 宣言+入力マクロ
+
+宣言してすぐ `read` するためのショートカットです。
 
 ```cpp
 #define INT(...)  int __VA_ARGS__; read(__VA_ARGS__)
@@ -104,59 +123,195 @@ fastio::print(a, b, c); // "a b c\n"
 #define STR(...)  string __VA_ARGS__; read(__VA_ARGS__)
 #define CHAR(...) char __VA_ARGS__; read(__VA_ARGS__)
 #define DBL(...)  double __VA_ARGS__; read(__VA_ARGS__)
-#define VEC(type, name, size) vector<type> name(size); read(name)
-#define VV(type, name, h, w) vector<vector<type>> name(h, vector<type>(w)); read(name)
+
+#define VEC(type, name, size) \
+    vector<type> name(size); \
+    read(name)
+
+#define VV(type, name, h, w) \
+    vector<vector<type>> name(h, vector<type>(w)); \
+    read(name)
+
 #define VEC0(type, name, size) vector<type> name(size)
 #define VV0(type, name, h, w) vector<vector<type>> name(h, vector<type>(w))
 ```
 
-注意:
-- 複数文に展開されるため、`if` 直下で使う場合は必ず `{}` を付けるのが安全です。
+使用例:
 
-### 7) 補助関数
+```cpp
+INT(n, m);
+VEC(int, a, n);
+VV0(ll, dist, n, n);
+```
+
+---
+
+## 5. `set` / `multiset` 補助（近傍取得・削除）
+
+### 近傍取得（iterator）
+
+```cpp
+GE_IT(c, x)
+```
+- `x` 以上の最小要素を指す iterator（`lower_bound`）
+- 存在しなければ `c.end()`
+
+```cpp
+LE_IT(c, x)
+```
+- `x` 以下の最大要素を指す iterator
+- 存在しなければ `c.end()`
+
+例:
+
+```cpp
+auto it1 = GE_IT(st, x);
+if (it1 != st.end()) {
+    ll v = *it1;
+}
+
+auto it2 = LE_IT(st, x);
+if (it2 != st.end()) {
+    ll v = *it2;
+}
+```
+
+### 近傍取得（値）
+
+```cpp
+GE_VAL(c, x)
+LE_VAL(c, x)
+```
+
+- 戻り値は `optional<typename C::value_type>`
+- 見つかれば値、無ければ `nullopt`
+
+例:
+
+```cpp
+auto a = GE_VAL(st, x);
+if (a) print(*a);
+
+auto b = LE_VAL(st, x);
+if (b) print(*b);
+```
+
+### 削除
+
+```cpp
+DISCARD_ONE(c, x)
+```
+- `set`: `x` を削除（0 or 1 個）
+- `multiset`: `x` を **1個だけ** 削除
+- 戻り値: `bool`（削除成功なら `true`）
+
+```cpp
+DISCARD_ALL(c, x)
+```
+- `set`: `x` を削除（0 or 1 個）
+- `multiset`: `x` を **全部** 削除
+- 戻り値: `int`（削除した個数）
+
+例:
+
+```cpp
+bool ok = DISCARD_ONE(ms, x); // multiset で1個だけ
+int cnt = DISCARD_ALL(ms, x); // multiset で全部
+```
+
+---
+
+## 6. 補助関数
+
+### 二分探索（`vector`）
 
 ```cpp
 template <class T>
-int bisect_left(const vector<T> &v, const T &x)
+int bisect_left(const vector<T> &v, const T &x);
 
 template <class T>
-int bisect_right(const vector<T> &v, const T &x)
-
-long long ipow(long long a, long long e)
-
-template <class It>
-string join(It first, It last, const string &sep)
-
-string join(const vector<string> &v, const string &sep)
-
-string join(const string &s, const string &sep)
-
-template <class C>
-string join(const C &c, const string &sep)
-
-template <class C>
-C reversed(C c)
-
-template <class T>
-long long sum(const vector<T> &v)
+int bisect_right(const vector<T> &v, const T &x);
 ```
 
-### 8) Graph（無向・重み無し）
+- `bisect_left`: `x` 以上の最初の位置
+- `bisect_right`: `x` より大きい最初の位置
 
-隣接リストは `vector<vector<int>>` で保持します。  
-`add_edge(u, v)` は無向（両方向に追加）がデフォルトです。
+### べき乗
+
+```cpp
+long long ipow(long long a, long long e);
+```
+
+- 単純な繰り返し二乗法
+- オーバーフローは呼び出し側で注意
+
+### `join` 系
+
+```cpp
+template <class It>
+string join(It first, It last, const string &sep);
+
+string join(const vector<string> &v, const string &sep);
+string join(const string &s, const string &sep);
+
+template <class C>
+string join(const C &c, const string &sep);
+```
+
+用途:
+- コンテナを区切り文字付き文字列にまとめる
+- 文字列 `s` の各文字の間に `sep` を挟む
+
+### 反転コピー
+
+```cpp
+template <class C>
+C reversed(C c);
+```
+
+- 引数のコピーを反転して返す（元データは変更しない）
+
+### 総和
+
+```cpp
+template <class T>
+long long sum(const vector<T> &v);
+```
+
+- `accumulate(..., 0LL)` で合計を返す
+
+---
+
+## 7. Graph（無向・重みなし）
+
+```cpp
+struct Graph
+{
+    int n;
+    vector<vector<int>> g;
+
+    Graph(int n = 0);
+    void add_edge(int u, int v, bool undirected = true);
+    vector<int> &operator[](int i);
+    const vector<int> &operator[](int i) const;
+};
+```
+
+使用例:
 
 ```cpp
 Graph G(n);
-G.add_edge(u, v);        // 無向（デフォルト）
-G.add_edge(u, v, false); // 有向にしたい場合
+G.add_edge(u, v);        // 無向
+G.add_edge(u, v, false); // 有向
 
 for (int to : G[u]) {
     // ...
 }
 ```
 
-### 9) main の雛形
+---
+
+## 8. main 雛形
 
 ```cpp
 int main()
@@ -165,14 +320,9 @@ int main()
 }
 ```
 
-## 使い方例
+必要に応じて以下を先頭に追加:
 
 ```cpp
-INT(n);
-VEC(int, a, n);
-LL(x, y);
-STR(s);
-print(n, x, s);
+ios::sync_with_stdio(false);
+cin.tie(nullptr);
 ```
-
-このテンプレートは基本的に `cin/cout` ベースなので、より高速な入出力が必要な場合は `ios::sync_with_stdio(false); cin.tie(nullptr);` を追加したり、別の高速 I/O に差し替える運用も可能です。

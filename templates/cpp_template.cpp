@@ -467,6 +467,78 @@ void printd(const Args &...) {}
 #define VV0(type, name, h, w)                     \
     vector<vector<type>> name(h, vector<type>(w))
 
+// ordered containers (set/multiset etc.) helpers:
+// GE_IT(c, x): iterator to minimum element >= x
+// LE_IT(c, x): iterator to maximum element <= x (or end if none)
+template <class C, class T>
+auto ge_it(const C &c, const T &x)
+{
+    return c.lower_bound(x);
+}
+
+template <class C, class T>
+auto le_it(const C &c, const T &x)
+{
+    auto it = c.upper_bound(x);
+    if (it == c.begin())
+        return c.end();
+    --it;
+    return it;
+}
+
+template <class C, class T>
+optional<typename C::value_type> ge_val(const C &c, const T &x)
+{
+    auto it = ge_it(c, x);
+    if (it == c.end())
+        return nullopt;
+    return *it;
+}
+
+template <class C, class T>
+optional<typename C::value_type> le_val(const C &c, const T &x)
+{
+    auto it = le_it(c, x);
+    if (it == c.end())
+        return nullopt;
+    return *it;
+}
+
+template <class T, class Compare, class Alloc>
+bool discard_one(set<T, Compare, Alloc> &s, const T &x)
+{
+    return s.erase(x) > 0;
+}
+
+template <class T, class Compare, class Alloc>
+bool discard_one(multiset<T, Compare, Alloc> &s, const T &x)
+{
+    auto it = s.find(x);
+    if (it == s.end())
+        return false;
+    s.erase(it); // erase only one
+    return true;
+}
+
+template <class T, class Compare, class Alloc>
+int discard_all(set<T, Compare, Alloc> &s, const T &x)
+{
+    return (int)s.erase(x); // 0 or 1
+}
+
+template <class T, class Compare, class Alloc>
+int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
+{
+    return (int)s.erase(x); // remove all x
+}
+
+#define GE_IT(c, x) ge_it((c), (x))
+#define LE_IT(c, x) le_it((c), (x))
+#define GE_VAL(c, x) ge_val((c), (x))
+#define LE_VAL(c, x) le_val((c), (x))
+#define DISCARD_ONE(c, x) discard_one((c), (x))
+#define DISCARD_ALL(c, x) discard_all((c), (x))
+
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
 {
