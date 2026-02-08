@@ -183,17 +183,25 @@ GE_VAL(c, x)
 LE_VAL(c, x)
 ```
 
-- 戻り値は `optional<typename C::value_type>`
-- 見つかれば値、無ければ `nullopt`
+- 戻り値は `typename C::value_type`（値を直接返す）
+- 要素が存在しない場合は `std::out_of_range` を送出
 
 例:
 
 ```cpp
-auto a = GE_VAL(st, x);
-if (a) print(*a);
+ll a = GE_VAL(st, x); // x以上の最小要素
+ll b = LE_VAL(st, x); // x以下の最大要素
+```
 
-auto b = LE_VAL(st, x);
-if (b) print(*b);
+存在しない可能性がある場合:
+
+```cpp
+try {
+    ll a = GE_VAL(st, x);
+    print(a);
+} catch (const out_of_range &) {
+    // 見つからないときの処理
+}
 ```
 
 ### 削除

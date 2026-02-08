@@ -487,20 +487,20 @@ auto le_it(const C &c, const T &x)
 }
 
 template <class C, class T>
-optional<typename C::value_type> ge_val(const C &c, const T &x)
+typename C::value_type ge_val(const C &c, const T &x)
 {
     auto it = ge_it(c, x);
     if (it == c.end())
-        return nullopt;
+        throw out_of_range("GE_VAL: no element >= x");
     return *it;
 }
 
 template <class C, class T>
-optional<typename C::value_type> le_val(const C &c, const T &x)
+typename C::value_type le_val(const C &c, const T &x)
 {
     auto it = le_it(c, x);
     if (it == c.end())
-        return nullopt;
+        throw out_of_range("LE_VAL: no element <= x");
     return *it;
 }
 
