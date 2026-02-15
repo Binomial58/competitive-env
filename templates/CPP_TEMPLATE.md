@@ -84,9 +84,8 @@ read(a);
 - `set`, `multiset`, `unordered_set`
 - `map`, `unordered_map`
 
-小数は自動で高精度表示:
-- `float`, `double`: `setprecision(15)`
-- `long double`: `setprecision(20)`
+小数は常に小数点以下10桁で固定表示:
+- `float`, `double`, `long double`: `fixed << setprecision(10)`
 
 ---
 

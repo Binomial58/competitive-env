@@ -75,10 +75,10 @@ namespace fastio
     template <class T>
     void wt(const T &x) { cout << x; }
 
-    // 小数は十分な桁数で出力
-    inline void wt(float x) { cout << setprecision(15) << x; }
-    inline void wt(double x) { cout << setprecision(15) << x; }
-    inline void wt(long double x) { cout << setprecision(20) << x; }
+    // 小数は小数点以下10桁で固定出力
+    inline void wt(float x) { cout << fixed << setprecision(10) << x; }
+    inline void wt(double x) { cout << fixed << setprecision(10) << x; }
+    inline void wt(long double x) { cout << fixed << setprecision(10) << x; }
 
     // 文字列系
     inline void wt(const char *s) { cout << s; }
@@ -249,9 +249,9 @@ namespace debugio
     template <class T>
     void dwt(const T &x) { cerr << x; }
 
-    inline void dwt(float x) { cerr << setprecision(15) << x; }
-    inline void dwt(double x) { cerr << setprecision(15) << x; }
-    inline void dwt(long double x) { cerr << setprecision(20) << x; }
+    inline void dwt(float x) { cerr << fixed << setprecision(10) << x; }
+    inline void dwt(double x) { cerr << fixed << setprecision(10) << x; }
+    inline void dwt(long double x) { cerr << fixed << setprecision(10) << x; }
 
     inline void dwt(const char *s) { cerr << s; }
     inline void dwt(const string &s) { cerr << s; }
