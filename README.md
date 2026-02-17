@@ -253,31 +253,6 @@ io term
 
 ---
 
-# C++ テンプレ：デバッグ出力（printd）
-
-`templates/cpp_template.cpp` には `printd` を用意してある。  
-`LOCAL` 定義時のみ有効で、それ以外は何も出力しない。
-
-概要:
-- 出力先は `cerr`
-- `vector/deque/array` は `[1,2,3]` 形式
-- `set/multiset/unordered_set` は `{1,2,3}` 形式
-- `map/unordered_map` は `{key:val,...}` 形式
-- `pair` は `(a,b)` 形式
-
-使い方:
-```cpp
-printd(v);
-printd(s, m);
-```
-
-有効化（例）:
-```bash
-g++ -std=gnu++20 -O2 -pipe -DLOCAL a.cpp
-```
-
----
-
 # C++ テンプレ：Graph（無向・重み無し）
 
 `templates/cpp_template.cpp` には無向・重み無しの `Graph` 構造体を用意してある。  

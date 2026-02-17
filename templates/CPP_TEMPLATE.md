@@ -89,28 +89,7 @@ read(a);
 
 ---
 
-## 3. デバッグ出力（`printd`）
-
-`debugio` 名前空間に実装されており、`LOCAL` 定義時だけ有効です。
-
-- `#ifdef LOCAL` のとき: 実際に `cerr` に出力
-- それ以外: 空関数（何も出ない）
-
-特徴:
-- `vector/deque/array` は `[]`
-- `set/multiset/unordered_set` は `{}`
-- `map/unordered_map` は `{key:val,...}`
-- `pair` / `tuple` に対応
-
-例:
-
-```cpp
-printd(a, b, v, st);
-```
-
----
-
-## 4. 宣言+入力マクロ
+## 3. 宣言+入力マクロ
 
 宣言してすぐ `read` するためのショートカットです。
 
@@ -145,7 +124,39 @@ VV0(ll, dist, n, n);
 
 ---
 
-## 5. `set` / `multiset` 補助（近傍取得・削除）
+## 4. `set` / `multiset` 補助（近傍取得・削除）
+
+### `set` の Python 風集合演算
+
+`std::set` 同士で以下の演算子が使えます（`multiset` は対象外）。
+
+- `A | B`: 和集合
+- `A & B`: 積集合
+- `A - B`: 差集合
+- `A ^ B`: 対称差
+- `A |= B`, `A &= B`, `A -= B`, `A ^= B`: 破壊的更新
+
+あわせて、判定関数も定義されています。
+
+- `is_subset(a, b)`: `a ⊆ b`
+- `is_superset(a, b)`: `a ⊇ b`
+- `is_disjoint(a, b)`: `a` と `b` が互いに素
+
+例:
+
+```cpp
+set<int> A = {1, 2, 3};
+set<int> B = {3, 4, 5};
+
+auto uni = A | B; // {1,2,3,4,5}
+auto inter = A & B; // {3}
+auto diff = A - B; // {1,2}
+auto sym = A ^ B; // {1,2,4,5}
+
+if (is_subset(inter, uni)) {
+    print("ok");
+}
+```
 
 ### 近傍取得（iterator）
 
@@ -228,7 +239,7 @@ int cnt = DISCARD_ALL(ms, x); // multiset で全部
 
 ---
 
-## 6. 補助関数
+## 5. 補助関数
 
 ### 二分探索（`vector`）
 
@@ -289,7 +300,7 @@ long long sum(const vector<T> &v);
 
 ---
 
-## 7. Graph（無向・重みなし）
+## 6. Graph（無向・重みなし）
 
 ```cpp
 struct Graph
@@ -318,7 +329,7 @@ for (int to : G[u]) {
 
 ---
 
-## 8. main 雛形
+## 7. main 雛形
 
 ```cpp
 int main()

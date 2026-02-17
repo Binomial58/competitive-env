@@ -242,198 +242,8 @@ namespace fastio
     }
 } // namespace fastio
 
-// debug output (enabled only when LOCAL is defined)
-namespace debugio
-{
-    // 基本型
-    template <class T>
-    void dwt(const T &x) { cerr << x; }
-
-    inline void dwt(float x) { cerr << fixed << setprecision(10) << x; }
-    inline void dwt(double x) { cerr << fixed << setprecision(10) << x; }
-    inline void dwt(long double x) { cerr << fixed << setprecision(10) << x; }
-
-    inline void dwt(const char *s) { cerr << s; }
-    inline void dwt(const string &s) { cerr << s; }
-
-    template <class A, class B>
-    void dwt(const pair<A, B> &p)
-    {
-        cerr << '(';
-        dwt(p.first);
-        cerr << ',';
-        dwt(p.second);
-        cerr << ')';
-    }
-
-    template <size_t I = 0, class... Ts>
-    inline enable_if_t<I == sizeof...(Ts)> dwt_tuple(const tuple<Ts...> &) {}
-    template <size_t I = 0, class... Ts>
-        inline enable_if_t < I<sizeof...(Ts)> dwt_tuple(const tuple<Ts...> &t)
-    {
-        if (I)
-            cerr << ',';
-        dwt(get<I>(t));
-        dwt_tuple<I + 1>(t);
-    }
-    template <class... Ts>
-    void dwt(const tuple<Ts...> &t)
-    {
-        cerr << '(';
-        dwt_tuple(t);
-        cerr << ')';
-    }
-
-    // forward declarations (two-phase lookup for container elements)
-    template <class T>
-    void dwt(const set<T> &s);
-    template <class T>
-    void dwt(const multiset<T> &s);
-    template <class T>
-    void dwt(const unordered_set<T> &s);
-    template <class K, class V>
-    void dwt(const map<K, V> &m);
-    template <class K, class V>
-    void dwt(const unordered_map<K, V> &m);
-
-    // array / vector / deque
-    template <class T, size_t N>
-    void dwt(const array<T, N> &a)
-    {
-        cerr << '[';
-        for (size_t i = 0; i < N; i++)
-        {
-            if (i)
-                cerr << ',';
-            dwt(a[i]);
-        }
-        cerr << ']';
-    }
-    template <class T>
-    void dwt(const vector<T> &v)
-    {
-        cerr << '[';
-        for (size_t i = 0; i < v.size(); i++)
-        {
-            if (i)
-                cerr << ',';
-            dwt(v[i]);
-        }
-        cerr << ']';
-    }
-    template <class T>
-    void dwt(const deque<T> &v)
-    {
-        cerr << '[';
-        for (size_t i = 0; i < v.size(); i++)
-        {
-            if (i)
-                cerr << ',';
-            dwt(v[i]);
-        }
-        cerr << ']';
-    }
-
-    // set / multiset / unordered_set
-    template <class T>
-    void dwt(const set<T> &s)
-    {
-        cerr << '{';
-        bool first = true;
-        for (const auto &x : s)
-        {
-            if (!first)
-                cerr << ',';
-            first = false;
-            dwt(x);
-        }
-        cerr << '}';
-    }
-    template <class T>
-    void dwt(const multiset<T> &s)
-    {
-        cerr << '{';
-        bool first = true;
-        for (const auto &x : s)
-        {
-            if (!first)
-                cerr << ',';
-            first = false;
-            dwt(x);
-        }
-        cerr << '}';
-    }
-    template <class T>
-    void dwt(const unordered_set<T> &s)
-    {
-        cerr << '{';
-        bool first = true;
-        for (const auto &x : s)
-        {
-            if (!first)
-                cerr << ',';
-            first = false;
-            dwt(x);
-        }
-        cerr << '}';
-    }
-
-    // map / unordered_map
-    template <class K, class V>
-    void dwt(const map<K, V> &m)
-    {
-        cerr << '{';
-        bool first = true;
-        for (const auto &kv : m)
-        {
-            if (!first)
-                cerr << ',';
-            first = false;
-            dwt(kv.first);
-            cerr << ':';
-            dwt(kv.second);
-        }
-        cerr << '}';
-    }
-    template <class K, class V>
-    void dwt(const unordered_map<K, V> &m)
-    {
-        cerr << '{';
-        bool first = true;
-        for (const auto &kv : m)
-        {
-            if (!first)
-                cerr << ',';
-            first = false;
-            dwt(kv.first);
-            cerr << ':';
-            dwt(kv.second);
-        }
-        cerr << '}';
-    }
-
-    // 出力本体
-    void printd() { cerr << '\n'; }
-
-    template <class Head, class... Tail>
-    void printd(const Head &head, const Tail &...tail)
-    {
-        dwt(head);
-        if (sizeof...(Tail))
-            cerr << ' ';
-        printd(tail...);
-    }
-} // namespace debugio
-
 using fastio::print;
 using fastio::read;
-
-#ifdef LOCAL
-using debugio::printd;
-#else
-template <class... Args>
-void printd(const Args &...) {}
-#endif
 
 #define INT(...)   \
     int __VA_ARGS__; \
@@ -538,6 +348,108 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define LE_VAL(c, x) le_val((c), (x))
 #define DISCARD_ONE(c, x) discard_one((c), (x))
 #define DISCARD_ALL(c, x) discard_all((c), (x))
+
+// Python-like set operations for std::set:
+// A | B, A & B, A - B, A ^ B and in-place variants.
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> operator|(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    set<T, CompareA, AllocA> res(a.begin(), a.end(), a.key_comp(), a.get_allocator());
+    res.insert(b.begin(), b.end());
+    return res;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> operator&(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    set<T, CompareA, AllocA> res(a.key_comp(), a.get_allocator());
+    for (const auto &x : a)
+    {
+        if (b.contains(x))
+            res.insert(x);
+    }
+    return res;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> operator-(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    set<T, CompareA, AllocA> res(a.key_comp(), a.get_allocator());
+    for (const auto &x : a)
+    {
+        if (!b.contains(x))
+            res.insert(x);
+    }
+    return res;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> operator^(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    set<T, CompareA, AllocA> res = a - b;
+    for (const auto &x : b)
+    {
+        if (!a.contains(x))
+            res.insert(x);
+    }
+    return res;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> &operator|=(set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    a = a | b;
+    return a;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> &operator&=(set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    a = a & b;
+    return a;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> &operator-=(set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    a = a - b;
+    return a;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+set<T, CompareA, AllocA> &operator^=(set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    a = a ^ b;
+    return a;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+bool is_subset(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    for (const auto &x : a)
+    {
+        if (!b.contains(x))
+            return false;
+    }
+    return true;
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+bool is_superset(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    return is_subset(b, a);
+}
+
+template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
+bool is_disjoint(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
+{
+    for (const auto &x : a)
+    {
+        if (b.contains(x))
+            return false;
+    }
+    return true;
+}
 
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
