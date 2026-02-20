@@ -118,6 +118,8 @@ namespace fastio
     void wt(const map<K, V> &m);
     template <class K, class V>
     void wt(const unordered_map<K, V> &m);
+    template <class T, class Container, class Compare>
+    void wt(const priority_queue<T, Container, Compare> &q);
 
     // array / vector / deque
     template <class T, size_t N>
@@ -158,6 +160,20 @@ namespace fastio
             if (i)
                 cout << ' ';
             wt(v[i]);
+        }
+    }
+    template <class T, class Container, class Compare>
+    void wt(const priority_queue<T, Container, Compare> &q)
+    {
+        auto qq = q;
+        bool first = true;
+        while (!qq.empty())
+        {
+            if (!first)
+                cout << ' ';
+            first = false;
+            wt(qq.top());
+            qq.pop();
         }
     }
 

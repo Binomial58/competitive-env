@@ -81,8 +81,11 @@ read(a);
 - `string`, `const char*`
 - `pair`, `tuple`
 - `array`, `vector`, `vector<vector<T>>`, `deque`
+- `priority_queue`
 - `set`, `multiset`, `unordered_set`
 - `map`, `unordered_map`
+
+`priority_queue` はコピーを作って `top()/pop()` で出力するため、元のキューは変更されません（優先度順に表示）。
 
 小数は常に小数点以下10桁で固定表示:
 - `float`, `double`, `long double`: `fixed << setprecision(10)`
