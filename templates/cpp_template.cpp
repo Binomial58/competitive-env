@@ -292,6 +292,10 @@ using fastio::read;
     vector<type> name(size)
 #define VV0(type, name, h, w)                     \
     vector<vector<type>> name(h, vector<type>(w))
+#define VECI(type, name, size, init) \
+    vector<type> name(size, init)
+#define VVI(type, name, h, w, init)                     \
+    vector<vector<type>> name(h, vector<type>(w, init))
 
 // ordered containers (set/multiset etc.) helpers:
 // GE_IT(c, x): iterator to minimum element >= x

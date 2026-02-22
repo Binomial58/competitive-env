@@ -115,6 +115,8 @@ read(a);
 
 #define VEC0(type, name, size) vector<type> name(size)
 #define VV0(type, name, h, w) vector<vector<type>> name(h, vector<type>(w))
+#define VECI(type, name, size, init) vector<type> name(size, init)
+#define VVI(type, name, h, w, init) vector<vector<type>> name(h, vector<type>(w, init))
 ```
 
 使用例:
@@ -123,6 +125,8 @@ read(a);
 INT(n, m);
 VEC(int, a, n);
 VV0(ll, dist, n, n);
+VECI(ll, dp, n, -1);          // 任意の初期値
+VVI(ll, cost, n, n, (1LL << 60)); // 任意の初期値
 ```
 
 ---
