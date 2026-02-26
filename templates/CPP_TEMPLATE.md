@@ -305,6 +305,40 @@ long long sum(const vector<T> &v);
 
 - `accumulate(..., 0LL)` で合計を返す
 
+### シーケンス結合（`vector` / `array`）
+
+```cpp
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, size_t N, size_t M>
+array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b);
+```
+
+- `vector` は `A + B` で新しい連結ベクタを返す
+- `vector` は `A += B` で `A` の末尾に `B` を追記する
+- `concat(A, B)` でも `vector` 連結が可能
+- `array` はサイズ固定なので `concat(A, B)` で `array<T, N+M>` を新規作成して返す
+
+例:
+
+```cpp
+vector<ll> A = {1, 2, 3};
+vector<ll> B = {4, 5};
+vector<ll> C = A + B; // {1,2,3,4,5}
+A += B;               // A も {1,2,3,4,5}
+
+array<int, 2> X = {1, 2};
+array<int, 3> Y = {3, 4, 5};
+auto Z = concat(X, Y); // array<int, 5> {1,2,3,4,5}
+```
+
 ---
 
 ## 6. Graph（無向・重みなし）

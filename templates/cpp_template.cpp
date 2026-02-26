@@ -564,6 +564,38 @@ long long sum(const vector<T> &v)
     return accumulate(v.begin(), v.end(), 0LL);
 }
 
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    vector<T, AllocA> res;
+    res.reserve(a.size() + b.size());
+    res.insert(res.end(), a.begin(), a.end());
+    res.insert(res.end(), b.begin(), b.end());
+    return res;
+}
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    return concat(a, b);
+}
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    a.insert(a.end(), b.begin(), b.end());
+    return a;
+}
+
+template <class T, size_t N, size_t M>
+array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b)
+{
+    array<T, N + M> res{};
+    copy(a.begin(), a.end(), res.begin());
+    copy(b.begin(), b.end(), res.begin() + N);
+    return res;
+}
+
 struct Graph
 {
     int n;
