@@ -5,21 +5,25 @@ using ll = long long;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
+// for文の短縮マクロ
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
 #define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
 #define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
 #define srep(i, a, b, step) \
     for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
 
+// コンテナ操作の短縮マクロ
 #define all(v) (v).begin(), (v).end()
 #define MIN(v) *min_element(all(v))
 #define MAX(v) *max_element(all(v))
 
+// よく使う定数
 const int INF = (1 << 30);
 const ll INFLL = (1LL << 62);
 const ll MOD = 998244353;
 const ll MOD2 = 1000000007;
 
+// 型ごとにread/printを拡張した入出力ヘルパー
 namespace fastio
 {
     // 入力
@@ -107,7 +111,7 @@ namespace fastio
     template <class... Ts>
     void wt(const tuple<Ts...> &t) { wt_tuple(t); }
 
-    // forward declarations (two-phase lookup for container elements)
+    // コンテナ内要素を再帰的に出力するための前方宣言
     template <class T>
     void wt(const set<T> &s);
     template <class T>
@@ -258,9 +262,11 @@ namespace fastio
     }
 } // namespace fastio
 
+// 頻出のI/O関数だけ名前空間から取り出す
 using fastio::print;
 using fastio::read;
 
+// 宣言+入力を1行で書くマクロ
 #define INT(...)   \
     int __VA_ARGS__; \
     read(__VA_ARGS__)
@@ -297,9 +303,9 @@ using fastio::read;
 #define VVI(type, name, h, w, init)                     \
     vector<vector<type>> name(h, vector<type>(w, init))
 
-// ordered containers (set/multiset etc.) helpers:
-// GE_IT(c, x): iterator to minimum element >= x
-// LE_IT(c, x): iterator to maximum element <= x (or end if none)
+// orderedコンテナ(set/multiset等)の境界検索ヘルパー
+// GE_IT(c, x): x以上の最小要素のiterator
+// LE_IT(c, x): x以下の最大要素のiterator（なければend）
 template <class C, class T>
 auto ge_it(const C &c, const T &x)
 {
@@ -369,8 +375,8 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define DISCARD_ONE(c, x) discard_one((c), (x))
 #define DISCARD_ALL(c, x) discard_all((c), (x))
 
-// Python-like set operations for std::set:
-// A | B, A & B, A - B, A ^ B and in-place variants.
+// std::setでPython風の集合演算を使うための演算子オーバーロード
+// A | B, A & B, A - B, A ^ B と代入版
 template <class T, class CompareA, class AllocA, class CompareB, class AllocB>
 set<T, CompareA, AllocA> operator|(const set<T, CompareA, AllocA> &a, const set<T, CompareB, AllocB> &b)
 {
@@ -471,6 +477,7 @@ bool is_disjoint(const set<T, CompareA, AllocA> &a, const set<T, CompareB, Alloc
     return true;
 }
 
+// 二分探索ヘルパー（Pythonのbisect相当）
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
 {
@@ -483,6 +490,7 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
+// 整数累乗（繰り返し二乗法）
 long long ipow(long long a, long long e)
 {
     long long r = 1;
@@ -496,6 +504,7 @@ long long ipow(long long a, long long e)
     return r;
 }
 
+// 区切り文字付きjoinヘルパー
 template <class It>
 string join(It first, It last, const string &sep)
 {
@@ -551,6 +560,7 @@ string join(const C &c, const string &sep)
     return join(c.begin(), c.end(), sep);
 }
 
+// 便利ユーティリティ（反転・合計・連結）
 template <class C>
 C reversed(C c)
 {
@@ -596,6 +606,7 @@ array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b)
     return res;
 }
 
+// 隣接リスト形式の軽量グラフ
 struct Graph
 {
     int n;
