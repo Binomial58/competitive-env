@@ -109,6 +109,12 @@ read(a);
     vector<type> name(size); \
     read(name)
 
+#define SET(type, name, size) \
+    set<type> name = read_set<type>(size)
+
+#define MSET(type, name, size) \
+    multiset<type> name = read_multiset<type>(size)
+
 #define VV(type, name, h, w) \
     vector<vector<type>> name(h, vector<type>(w)); \
     read(name)
@@ -124,6 +130,8 @@ read(a);
 ```cpp
 INT(n, m);
 VEC(int, a, n);
+SET(int, s, n);               // 重複は自動で1つにまとまる
+MSET(int, ms, n);             // 重複も保持する
 VV0(ll, dist, n, n);
 VECI(ll, dp, n, -1);          // 任意の初期値
 VVI(ll, cost, n, n, (1LL << 60)); // 任意の初期値

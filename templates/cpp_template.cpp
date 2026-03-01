@@ -67,6 +67,32 @@ namespace fastio
             read(x);
     }
 
+    template <class T, class Compare = less<T>, class Alloc = allocator<T>>
+    set<T, Compare, Alloc> read_set(size_t n)
+    {
+        set<T, Compare, Alloc> s;
+        for (size_t i = 0; i < n; i++)
+        {
+            T x;
+            read(x);
+            s.insert(x);
+        }
+        return s;
+    }
+
+    template <class T, class Compare = less<T>, class Alloc = allocator<T>>
+    multiset<T, Compare, Alloc> read_multiset(size_t n)
+    {
+        multiset<T, Compare, Alloc> s;
+        for (size_t i = 0; i < n; i++)
+        {
+            T x;
+            read(x);
+            s.insert(x);
+        }
+        return s;
+    }
+
     template <class Head, class... Tail>
     void read(Head &head, Tail &...tail)
     {
@@ -265,6 +291,8 @@ namespace fastio
 // 頻出のI/O関数だけ名前空間から取り出す
 using fastio::print;
 using fastio::read;
+using fastio::read_multiset;
+using fastio::read_set;
 
 // 宣言+入力を1行で書くマクロ
 #define INT(...)   \
@@ -291,6 +319,10 @@ using fastio::read;
 #define VEC(type, name, size) \
     vector<type> name(size);    \
     read(name)
+#define SET(type, name, size) \
+    set<type> name = read_set<type>(size)
+#define MSET(type, name, size) \
+    multiset<type> name = read_multiset<type>(size)
 #define VV(type, name, h, w)                     \
     vector<vector<type>> name(h, vector<type>(w)); \
     read(name)
