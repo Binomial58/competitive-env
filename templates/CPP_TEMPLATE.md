@@ -305,6 +305,25 @@ string join(const C &c, const string &sep);
 - コンテナを区切り文字付き文字列にまとめる
 - 文字列 `s` の各文字の間に `sep` を挟む
 
+### 文字列 `count`
+
+```cpp
+int count(const string &s, char c);
+int count(const string &s, const string &t);
+```
+
+- `count(s, c)`: 文字 `c` の出現回数
+- `count(s, t)`: 部分文字列 `t` の出現回数（重なりなし）
+- `t` が空文字なら `s.size() + 1` を返す（Python `str.count` 相当）
+
+例:
+
+```cpp
+string s = "ababa";
+int a = count(s, 'a');     // 3
+int b = count(s, "aba");   // 1
+```
+
 ### 反転コピー
 
 ```cpp

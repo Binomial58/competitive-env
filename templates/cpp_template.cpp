@@ -614,6 +614,28 @@ string join(const C &c, const string &sep)
     return join(c.begin(), c.end(), sep);
 }
 
+inline int count(const string &s, char c)
+{
+    return int(std::count(s.begin(), s.end(), c));
+}
+
+inline int count(const string &s, const string &t)
+{
+    if (t.empty())
+        return int(s.size() + 1);
+    int cnt = 0;
+    size_t pos = 0;
+    while (true)
+    {
+        pos = s.find(t, pos);
+        if (pos == string::npos)
+            break;
+        ++cnt;
+        pos += t.size(); // Python str.count と同じく重なりは数えない
+    }
+    return cnt;
+}
+
 // 便利ユーティリティ（反転・合計・連結）
 template <class C>
 C reversed(C c)
