@@ -407,7 +407,35 @@ for (int to : G[u]) {
 
 ---
 
-## 7. main 雛形
+## 7. 比較関数の書き方
+
+余り（`k > 0`）を使う例です。入力が正の数のみなら `a % k` をそのまま使えます。
+
+`sort` 用（余り昇順、同じ余りなら値昇順）:
+
+```cpp
+int k = 5;
+auto cmp_mod = [k](ll a, ll b) {
+    if (a % k != b % k) return (a % k) < (b % k);
+    return a < b;
+};
+sort(v.begin(), v.end(), cmp_mod);
+```
+
+`priority_queue` 用（top が「余りが小さいもの」）:
+
+```cpp
+int k = 5;
+auto cmp_pq = [k](ll a, ll b) {
+    if (a % k != b % k) return (a % k) > (b % k);
+    return a > b;
+};
+priority_queue<ll, vector<ll>, decltype(cmp_pq)> pq(cmp_pq);
+```
+
+---
+
+## 8. main 雛形
 
 ```cpp
 int main()
