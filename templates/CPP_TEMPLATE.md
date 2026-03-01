@@ -90,6 +90,16 @@ read(a);
 小数は常に小数点以下10桁で固定表示:
 - `float`, `double`, `long double`: `fixed << setprecision(10)`
 
+### デバッグ出力: `printd(x)`
+
+`printd(A)` のように書くと、`stderr` に `A:...` 形式で出力します。  
+`wt(...)` と同じ表示ルールを使うので、`vector` / `set` / `map` などもそのまま見やすく表示できます。
+
+```cpp
+vector<int> A = {1, 2, 3};
+printd(A); // A:1 2 3
+```
+
 ---
 
 ## 3. 宣言+入力マクロ
