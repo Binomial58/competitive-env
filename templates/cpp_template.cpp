@@ -701,6 +701,32 @@ struct Graph
     const vector<int> &operator[](int i) const { return g[i]; }
 };
 
+// 隣接リスト形式の重み付きグラフ（to, weight）
+template <class W = long long>
+struct WeightedGraph
+{
+    struct Edge
+    {
+        int to;
+        W w;
+    };
+
+    int n;
+    vector<vector<Edge>> g;
+
+    WeightedGraph(int n = 0) : n(n), g(n) {}
+
+    void add_edge(int u, int v, W w, bool undirected = true)
+    {
+        g[u].push_back({v, w});
+        if (undirected)
+            g[v].push_back({u, w});
+    }
+
+    vector<Edge> &operator[](int i) { return g[i]; }
+    const vector<Edge> &operator[](int i) const { return g[i]; }
+};
+
 int main()
 {
     // ここにコードを書く

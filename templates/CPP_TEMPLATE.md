@@ -378,7 +378,9 @@ auto Z = concat(X, Y); // array<int, 5> {1,2,3,4,5}
 
 ---
 
-## 6. Graph（無向・重みなし）
+## 6. Graph（重みなし / 重み付き）
+
+### 重みなしグラフ
 
 ```cpp
 struct Graph
@@ -401,6 +403,42 @@ G.add_edge(u, v);        // 無向
 G.add_edge(u, v, false); // 有向
 
 for (int to : G[u]) {
+    // ...
+}
+```
+
+### 重み付きグラフ
+
+```cpp
+template <class W = long long>
+struct WeightedGraph
+{
+    struct Edge
+    {
+        int to;
+        W w;
+    };
+
+    int n;
+    vector<vector<Edge>> g;
+
+    WeightedGraph(int n = 0);
+    void add_edge(int u, int v, W w, bool undirected = true);
+    vector<Edge> &operator[](int i);
+    const vector<Edge> &operator[](int i) const;
+};
+```
+
+使用例:
+
+```cpp
+WeightedGraph<ll> WG(n);
+WG.add_edge(u, v, cost);        // 無向
+WG.add_edge(u, v, cost, false); // 有向
+
+for (auto e : WG[u]) {
+    int to = e.to;
+    ll w = e.w;
     // ...
 }
 ```

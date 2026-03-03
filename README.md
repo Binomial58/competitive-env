@@ -253,17 +253,30 @@ io term
 
 ---
 
-# C++ テンプレ：Graph（無向・重み無し）
+# C++ テンプレ：Graph（重みなし / 重み付き）
 
-`templates/cpp_template.cpp` には無向・重み無しの `Graph` 構造体を用意してある。  
-隣接リストは `vector<vector<int>>` で保持する。
+`templates/cpp_template.cpp` には次の2種類を用意してある。
 
-例:
+- `Graph`（重みなし）: `vector<vector<int>>`
+- `WeightedGraph<W>`（重み付き）: `vector<vector<Edge>>` (`Edge{to, w}`)
+
+例（重みなし）:
 ```cpp
 Graph G(n);
-G.add_edge(u, v);   // 無向（デフォルト）
+G.add_edge(u, v);        // 無向（デフォルト）
+G.add_edge(u, v, false); // 有向
 for (int to : G[u]) {
     // ...
+}
+```
+
+例（重み付き）:
+```cpp
+WeightedGraph<ll> WG(n);
+WG.add_edge(u, v, cost);        // 無向（デフォルト）
+WG.add_edge(u, v, cost, false); // 有向
+for (auto e : WG[u]) {
+    // e.to, e.w
 }
 ```
 
