@@ -636,6 +636,28 @@ inline int count(const string &s, const string &t)
     return cnt;
 }
 
+inline string replace(string s, const string &from, const string &to)
+{
+    if (from.empty())
+        return s;
+    size_t pos = 0;
+    while (true)
+    {
+        pos = s.find(from, pos);
+        if (pos == string::npos)
+            break;
+        s.replace(pos, from.size(), to);
+        pos += to.size();
+    }
+    return s;
+}
+
+inline string replace(string s, char from, char to)
+{
+    std::replace(s.begin(), s.end(), from, to);
+    return s;
+}
+
 // 便利ユーティリティ（反転・合計・連結）
 template <class C>
 C reversed(C c)

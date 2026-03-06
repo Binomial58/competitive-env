@@ -324,6 +324,25 @@ int a = count(s, 'a');     // 3
 int b = count(s, "aba");   // 1
 ```
 
+### 文字列 `replace`
+
+```cpp
+string replace(string s, const string &from, const string &to);
+string replace(string s, char from, char to);
+```
+
+- `replace(s, from, to)`: `s` 内の `from` をすべて `to` に置換した新しい文字列を返す
+- `replace(s, c1, c2)`: 文字 `c1` をすべて `c2` に置換した新しい文字列を返す
+- 元の `s` は変更しない（コピーを返す）
+
+例:
+
+```cpp
+string s = "ababa";
+string t = replace(s, "aba", "x"); // "xba"
+string u = replace(s, 'a', 'z');   // "zbzbz"
+```
+
 ### 反転コピー
 
 ```cpp
