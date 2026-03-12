@@ -103,7 +103,17 @@ namespace fastio
 
     // 基本型
     template <class T>
-    void wt(const T &x) { cout << x; }
+    void wt(const T &x)
+    {
+        if constexpr (requires { x.val(); })
+        {
+            wt(x.val());
+        }
+        else
+        {
+            cout << x;
+        }
+    }
 
     // 小数は小数点以下10桁で固定出力
     inline void wt(float x) { cout << fixed << setprecision(10) << x; }

@@ -78,6 +78,7 @@ read(a);
 
 内部 `wt(...)` が対応している型:
 - 基本型
+- `val()` を持つ型（`Modint9` など）は `val()` を出力
 - `string`, `const char*`
 - `pair`, `tuple`
 - `array`, `vector`, `vector<vector<T>>`, `deque`
