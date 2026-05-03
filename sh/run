@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: run [sample_number] [source_name]" >&2
-    echo "       run [--sample N] [source_name]" >&2
+    echo "usage: run [--debug] [sample_number] [source_name]" >&2
+    echo "       run [--debug] [--sample N] [source_name]" >&2
     exit 1
 }
 
@@ -91,10 +91,15 @@ resolve_target() {
 }
 
 SAMPLE_ONLY=""
+DEBUG=false
 
 SOURCE_ARG=""
 while [ $# -gt 0 ]; do
     case "$1" in
+        --debug|-d)
+            DEBUG=true
+            shift
+            ;;
         --sample|--only|-s)
             shift
             [ $# -gt 0 ] || usage
@@ -134,11 +139,19 @@ TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
 
 if [[ "$TARGET" == *.cpp ]]; then
     SRC_BASE="${TARGET%.cpp}"
-    "$SCRIPT_DIR/build.sh" "$SRC_BASE"
-    if [ -n "$SAMPLE_ONLY" ]; then
-        "$SCRIPT_DIR/ioall" --sample "$SAMPLE_ONLY"
+    RUN_EXE="./a.out"
+    IO_DEBUG_ARGS=(--debug-source "$SRC_BASE")
+    if $DEBUG; then
+        RUN_EXE="./a.debug.out"
+        IO_DEBUG_ARGS=(--debug-source "$SRC_BASE" --no-debug-retry)
+        CPP_OUT="$RUN_EXE" "$SCRIPT_DIR/build.sh" "$SRC_BASE" debug
     else
-        "$SCRIPT_DIR/io" term
+        "$SCRIPT_DIR/build.sh" "$SRC_BASE"
+    fi
+    if [ -n "$SAMPLE_ONLY" ]; then
+        CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}" --sample "$SAMPLE_ONLY"
+    else
+        CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/io" term "${IO_DEBUG_ARGS[@]}"
     fi
 else
     if [ -n "$SAMPLE_ONLY" ]; then

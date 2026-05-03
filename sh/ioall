@@ -1,11 +1,20 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 SAMPLE_DIR="samples"
 FAIL_DIR="failures"
 
 CLEAN=false
 SAMPLE_ONLY=""
 NO_DIFF=false
+DEBUG_RETRY=true
+DEBUG_SOURCE=""
+RUN_EXE="${CPP_EXE:-./a.out}"
+DEBUG_EXE="${CPP_DEBUG_EXE:-./a.debug.out}"
+TRACE_EXE="${CPP_TRACE_EXE:-./a.trace.out}"
+DEBUG_READY=false
+TRACE_READY=false
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -19,7 +28,24 @@ while [ $# -gt 0 ]; do
             ;;
         --sample|--only|-s)
             shift
+            [ $# -gt 0 ] || { echo "error: --sample requires a number."; exit 1; }
             SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --debug-source)
+            shift
+            [ $# -gt 0 ] || { echo "error: --debug-source requires a source name."; exit 1; }
+            DEBUG_SOURCE="$1"
+            shift
+            ;;
+        --no-debug-retry)
+            DEBUG_RETRY=false
+            shift
+            ;;
+        --exe)
+            shift
+            [ $# -gt 0 ] || { echo "error: --exe requires a path."; exit 1; }
+            RUN_EXE="$1"
             shift
             ;;
         *)
@@ -33,15 +59,174 @@ if $CLEAN; then
     rm -rf "$FAIL_DIR"
 fi
 
-if [ ! -f "./a.out" ]; then
-    echo "error: a.out not found."
+if [ ! -f "$RUN_EXE" ]; then
+    echo "error: $RUN_EXE not found."
     exit 1
 fi
+
+. "$SCRIPT_DIR/cpp_re_report.sh"
+cpp_re_export_sanitizer_options
 
 shopt -s nullglob
 OK_ALL=true
 SINGLE=false
 HAD_RE=false
+
+run_executable() {
+    local exe="$1"
+    local infile="$2"
+    local tmpfile="$3"
+    local errfile="$4"
+
+    : > "$errfile"
+    { "$exe" < "$infile" > "$tmpfile"; } 2>"$errfile"
+    return $?
+}
+
+cleanup_empty_fail_dir() {
+    if [ -d "$FAIL_DIR" ] && [ -z "$(find "$FAIL_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+        rmdir "$FAIL_DIR"
+    fi
+}
+
+has_re_artifacts() {
+    [ -d "$FAIL_DIR" ] && find "$FAIL_DIR" -mindepth 1 -maxdepth 1 -name "*.err" -print -quit | grep -q .
+}
+
+cleanup_generated_binaries() {
+    [ "$DEBUG_EXE" = "./a.debug.out" ] && rm -f "$DEBUG_EXE"
+    [ "$TRACE_EXE" = "./a.trace.out" ] && rm -f "$TRACE_EXE"
+}
+
+cleanup_re_artifacts() {
+    local label="$1"
+
+    if [ -d "$FAIL_DIR" ]; then
+        rm -f "$FAIL_DIR/$label.err" "$FAIL_DIR/$label.debug.err" "$FAIL_DIR/$label.trace.err"
+    fi
+
+    if ! has_re_artifacts; then
+        cleanup_generated_binaries
+    fi
+    cleanup_empty_fail_dir
+}
+
+cleanup_case_artifacts() {
+    local label="$1"
+
+    cleanup_re_artifacts "$label"
+    if [ -d "$FAIL_DIR" ]; then
+        rm -f "$FAIL_DIR/$label.diff"
+        cleanup_empty_fail_dir
+    fi
+}
+
+build_debug_binary() {
+    if $DEBUG_READY; then
+        return 0
+    fi
+    if ! $DEBUG_RETRY || [ -z "$DEBUG_SOURCE" ] || [ "$RUN_EXE" = "$DEBUG_EXE" ]; then
+        return 1
+    fi
+
+    echo "  debug: sanitizer付きで再実行します"
+    if CPP_OUT="$DEBUG_EXE" "$SCRIPT_DIR/build.sh" "$DEBUG_SOURCE" debug; then
+        DEBUG_READY=true
+        return 0
+    fi
+
+    echo "  debug: debug build failed"
+    return 1
+}
+
+build_trace_binary() {
+    if $TRACE_READY; then
+        return 0
+    fi
+    if [ -z "$DEBUG_SOURCE" ] || [ "$RUN_EXE" = "$TRACE_EXE" ]; then
+        return 1
+    fi
+
+    echo "  trace: ユーザーコード行を確認します"
+    if CPP_OUT="$TRACE_EXE" "$SCRIPT_DIR/build.sh" "$DEBUG_SOURCE" trace; then
+        TRACE_READY=true
+        return 0
+    fi
+
+    echo "  trace: trace build failed"
+    return 1
+}
+
+retry_trace_case() {
+    local infile="$1"
+    local label="$2"
+    local tmpfile="$3"
+    local trace_tmpfile="${tmpfile}.trace"
+    local trace_errfile="${tmpfile}.trace.err"
+    local trace_status trace_start trace_end trace_elapsed
+
+    build_trace_binary || return
+
+    trace_start=$(date +%s%3N)
+    run_executable "$TRACE_EXE" "$infile" "$trace_tmpfile" "$trace_errfile"
+    trace_status=$?
+    trace_end=$(date +%s%3N)
+    trace_elapsed=$((trace_end - trace_start))
+
+    mkdir -p "$FAIL_DIR"
+    if [ -s "$trace_errfile" ]; then
+        cp "$trace_errfile" "$FAIL_DIR/$label.trace.err"
+    fi
+
+    if [ $trace_status -ne 0 ]; then
+        echo "[TRACE-RE] $label (${trace_elapsed} ms)"
+        cpp_re_print_compact_report "$trace_status" "$trace_errfile" "$DEBUG_SOURCE"
+    else
+        echo "[TRACE-OK] $label (${trace_elapsed} ms)"
+        echo "  location: trace build では再現しませんでした"
+    fi
+
+    rm -f "$trace_tmpfile" "$trace_errfile"
+}
+
+retry_debug_case() {
+    local infile="$1"
+    local label="$2"
+    local tmpfile="$3"
+    local debug_tmpfile="${tmpfile}.debug"
+    local debug_errfile="${tmpfile}.debug.err"
+    local debug_status debug_start debug_end debug_elapsed
+
+    build_debug_binary || return
+
+    debug_start=$(date +%s%3N)
+    run_executable "$DEBUG_EXE" "$infile" "$debug_tmpfile" "$debug_errfile"
+    debug_status=$?
+    debug_end=$(date +%s%3N)
+    debug_elapsed=$((debug_end - debug_start))
+
+    mkdir -p "$FAIL_DIR"
+    if [ -s "$debug_errfile" ]; then
+        cp "$debug_errfile" "$FAIL_DIR/$label.debug.err"
+    fi
+
+    if [ $debug_status -ne 0 ]; then
+        echo "[DEBUG-RE] $label (${debug_elapsed} ms)"
+        cpp_re_print_report "$debug_status" "$debug_errfile" "$DEBUG_SOURCE"
+        if [ -z "$(cpp_re_extract_location "$debug_errfile" "$DEBUG_SOURCE")" ]; then
+            retry_trace_case "$infile" "$label" "$tmpfile"
+        fi
+    else
+        echo "[DEBUG-OK] $label (${debug_elapsed} ms)"
+        echo "  cause: debug build では再現しませんでした"
+        if cpp_re_filtered_stderr_has_content "$debug_errfile"; then
+            echo "  stderr:"
+            cpp_re_print_filtered_stderr "$debug_errfile"
+        fi
+    fi
+
+    rm -f "$debug_tmpfile" "$debug_errfile"
+}
 
 run_case() {
     local infile="$1"
@@ -49,20 +234,37 @@ run_case() {
     local label="$3"
     local tmpfile="$4"
     local difffile="$5"
+    local errfile="${tmpfile}.err"
+    local start end elapsed status
 
     start=$(date +%s%3N)
-    ./a.out < "$infile" > "$tmpfile"
+    run_executable "$RUN_EXE" "$infile" "$tmpfile" "$errfile"
     status=$?
     end=$(date +%s%3N)
     elapsed=$((end - start))
 
     if [ $status -ne 0 ]; then
         echo "[RE]   $label (${elapsed} ms)"
+        cpp_re_print_report "$status" "$errfile" "$DEBUG_SOURCE"
+        mkdir -p "$FAIL_DIR"
+        if [ -s "$errfile" ]; then
+            cp "$errfile" "$FAIL_DIR/$label.err"
+        fi
+        if $DEBUG_RETRY && [ "$RUN_EXE" != "$DEBUG_EXE" ]; then
+            retry_debug_case "$infile" "$label" "$tmpfile"
+        elif [ -z "$(cpp_re_extract_location "$errfile" "$DEBUG_SOURCE")" ]; then
+            retry_trace_case "$infile" "$label" "$tmpfile"
+        fi
         HAD_RE=true
         OK_ALL=false
-        rm -f "$tmpfile"
+        rm -f "$tmpfile" "$errfile"
         return
     fi
+
+    if [ -s "$errfile" ]; then
+        cat "$errfile" >&2
+    fi
+    cleanup_re_artifacts "$label"
 
     if $SINGLE; then
         cat "$infile"
@@ -74,6 +276,7 @@ run_case() {
     if [ -f "$outfile" ]; then
         if diff -u "$outfile" "$tmpfile" > /dev/null; then
             echo "[AC]   $label (${elapsed} ms)"
+            cleanup_case_artifacts "$label"
         else
             echo "[WA]   $label (${elapsed} ms)"
             mkdir -p "$FAIL_DIR"
@@ -86,12 +289,13 @@ run_case() {
         fi
     else
         echo "[RUN]  $label (${elapsed} ms)"
+        cleanup_case_artifacts "$label"
         if ! $SINGLE; then
             cat "$tmpfile"
         fi
     fi
 
-    rm -f "$tmpfile"
+    rm -f "$tmpfile" "$errfile"
 }
 
 resolve_sample_input() {

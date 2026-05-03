@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: runall [source_name]" >&2
+    echo "usage: runall [--debug] [source_name]" >&2
     exit 1
 }
 
@@ -89,15 +89,43 @@ resolve_target() {
     return 1
 }
 
-[ $# -le 1 ] || usage
+DEBUG=false
+SOURCE_ARG=""
 
-SOURCE_ARG="${1:-}"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --debug|-d)
+            DEBUG=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            ;;
+        *)
+            if [ -z "$SOURCE_ARG" ]; then
+                SOURCE_ARG="$1"
+            else
+                usage
+            fi
+            shift
+            ;;
+    esac
+done
+
 TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
 
 if [[ "$TARGET" == *.cpp ]]; then
     SRC_BASE="${TARGET%.cpp}"
-    "$SCRIPT_DIR/build.sh" "$SRC_BASE"
-    "$SCRIPT_DIR/ioall"
+    RUN_EXE="./a.out"
+    IO_DEBUG_ARGS=(--debug-source "$SRC_BASE")
+    if $DEBUG; then
+        RUN_EXE="./a.debug.out"
+        IO_DEBUG_ARGS=(--debug-source "$SRC_BASE" --no-debug-retry)
+        CPP_OUT="$RUN_EXE" "$SCRIPT_DIR/build.sh" "$SRC_BASE" debug
+    else
+        "$SCRIPT_DIR/build.sh" "$SRC_BASE"
+    fi
+    CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}"
     echo "=== コピーします ==="
     if command -v xclip >/dev/null 2>&1; then
         if xclip -selection clipboard < "$TARGET"; then

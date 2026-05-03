@@ -1,32 +1,179 @@
 #!/bin/bash
 
-# a.out の存在確認
-if [ ! -f "./a.out" ]; then
-    echo "error: a.out not found."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+TERM=false
+DEBUG_RETRY=true
+DEBUG_SOURCE=""
+RUN_EXE="${CPP_EXE:-./a.out}"
+DEBUG_EXE="${CPP_DEBUG_EXE:-./a.debug.out}"
+TRACE_EXE="${CPP_TRACE_EXE:-./a.trace.out}"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        term)
+            TERM=true
+            shift
+            ;;
+        --debug-source)
+            shift
+            [ $# -gt 0 ] || { echo "error: --debug-source requires a source name."; exit 1; }
+            DEBUG_SOURCE="$1"
+            shift
+            ;;
+        --no-debug-retry)
+            DEBUG_RETRY=false
+            shift
+            ;;
+        --exe)
+            shift
+            [ $# -gt 0 ] || { echo "error: --exe requires a path."; exit 1; }
+            RUN_EXE="$1"
+            shift
+            ;;
+        *)
+            echo "usage: io [term] [--debug-source source] [--no-debug-retry]" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ ! -f "$RUN_EXE" ]; then
+    echo "error: $RUN_EXE not found."
     exit 1
 fi
 
-# in.txt の存在確認
 if [ ! -f "./in.txt" ]; then
     echo "error: in.txt not found."
     exit 1
 fi
 
-if [ "$1" = "term" ]; then
+. "$SCRIPT_DIR/cpp_re_report.sh"
+cpp_re_export_sanitizer_options
+
+run_executable() {
+    local exe="$1"
+    local outfile="$2"
+    local errfile="$3"
+
+    : > "$errfile"
+    if $TERM; then
+        { "$exe" < in.txt; } 2>"$errfile"
+    else
+        { "$exe" < in.txt > "$outfile"; } 2>"$errfile"
+    fi
+    return $?
+}
+
+cleanup_generated_binaries() {
+    [ "$DEBUG_EXE" = "./a.debug.out" ] && rm -f "$DEBUG_EXE"
+    [ "$TRACE_EXE" = "./a.trace.out" ] && rm -f "$TRACE_EXE"
+}
+
+retry_debug() {
+    local errfile="$1"
+    local outfile="$2"
+    local debug_errfile="in.debug.err"
+    local debug_status debug_start debug_end debug_elapsed
+
+    if ! $DEBUG_RETRY || [ -z "$DEBUG_SOURCE" ] || [ "$RUN_EXE" = "$DEBUG_EXE" ]; then
+        return
+    fi
+
+    echo "  debug: sanitizer付きで再実行します"
+    if ! CPP_OUT="$DEBUG_EXE" "$SCRIPT_DIR/build.sh" "$DEBUG_SOURCE" debug; then
+        echo "  debug: debug build failed"
+        return
+    fi
+
+    debug_start=$(date +%s%3N)
+    run_executable "$DEBUG_EXE" "$outfile" "$debug_errfile"
+    debug_status=$?
+    debug_end=$(date +%s%3N)
+    debug_elapsed=$((debug_end - debug_start))
+
+    if [ $debug_status -ne 0 ]; then
+        echo "[DEBUG-RE] in.txt (${debug_elapsed} ms)"
+        cpp_re_print_report "$debug_status" "$debug_errfile" "$DEBUG_SOURCE"
+        if [ -z "$(cpp_re_extract_location "$debug_errfile" "$DEBUG_SOURCE")" ]; then
+            retry_trace "$outfile"
+        fi
+    else
+        echo "[DEBUG-OK] in.txt (${debug_elapsed} ms)"
+        echo "  cause: debug build では再現しませんでした"
+        if cpp_re_filtered_stderr_has_content "$debug_errfile"; then
+            echo "  stderr:"
+            cpp_re_print_filtered_stderr "$debug_errfile"
+        fi
+    fi
+
+    rm -f "$debug_errfile"
+    : > "$errfile"
+}
+
+retry_trace() {
+    local outfile="$1"
+    local trace_errfile="in.trace.err"
+    local trace_status trace_start trace_end trace_elapsed
+
+    if [ -z "$DEBUG_SOURCE" ] || [ "$RUN_EXE" = "$TRACE_EXE" ]; then
+        return
+    fi
+
+    echo "  trace: ユーザーコード行を確認します"
+    if ! CPP_OUT="$TRACE_EXE" "$SCRIPT_DIR/build.sh" "$DEBUG_SOURCE" trace; then
+        echo "  trace: trace build failed"
+        return
+    fi
+
+    trace_start=$(date +%s%3N)
+    run_executable "$TRACE_EXE" "$outfile" "$trace_errfile"
+    trace_status=$?
+    trace_end=$(date +%s%3N)
+    trace_elapsed=$((trace_end - trace_start))
+
+    if [ $trace_status -ne 0 ]; then
+        echo "[TRACE-RE] in.txt (${trace_elapsed} ms)"
+        cpp_re_print_compact_report "$trace_status" "$trace_errfile" "$DEBUG_SOURCE"
+    else
+        echo "[TRACE-OK] in.txt (${trace_elapsed} ms)"
+        echo "  location: trace build では再現しませんでした"
+    fi
+
+    rm -f "$trace_errfile"
+}
+
+if $TERM; then
     cat in.txt
     echo
 fi
 
 start=$(date +%s%3N)
-
-if [ "$1" = "term" ]; then
-    ./a.out < in.txt
-    echo
-else
-    ./a.out < in.txt > out.txt
-fi
-
+run_executable "$RUN_EXE" "out.txt" "in.err"
+status=$?
 end=$(date +%s%3N)
 elapsed=$((end - start))
 
+if [ $status -ne 0 ]; then
+    echo "[RE]   in.txt (${elapsed} ms)"
+    cpp_re_print_report "$status" "in.err" "$DEBUG_SOURCE"
+    if $DEBUG_RETRY && [ "$RUN_EXE" != "$DEBUG_EXE" ]; then
+        retry_debug "in.err" "out.txt"
+    elif [ -z "$(cpp_re_extract_location "in.err" "$DEBUG_SOURCE")" ]; then
+        retry_trace "out.txt"
+    fi
+    rm -f in.err
+    exit 1
+fi
+
+if [ -s in.err ]; then
+    cat in.err >&2
+fi
+
+if $TERM; then
+    echo
+fi
+
+rm -f in.err
+cleanup_generated_binaries
 echo "[Time] ${elapsed} ms"

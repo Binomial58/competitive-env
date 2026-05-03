@@ -42,6 +42,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 概要:
 - C++: `build.sh` → `io term`
 - Python: `python3` で直接実行
+- C++ が RE した場合は sanitizer 付き debug build で同じ入力を再実行し、原因候補・該当行を表示
 
 例:
 ```bash
@@ -49,6 +50,7 @@ run
 run a
 run a.cpp
 run a.py
+run --debug
 ```
 
 ---
@@ -59,6 +61,7 @@ run a.py
 - C++: `build.sh` → `ioall`
 - Python: `pyall`
 - すべて通過したら **ソースを自動コピー**
+- C++ が RE した場合は sanitizer 付き debug build で同じ入力を再実行し、原因候補・該当行を表示
 
 例:
 ```bash
@@ -66,6 +69,7 @@ runall
 runall a
 runall a.cpp
 runall a.py
+runall --debug
 ```
 
 ---
@@ -83,6 +87,7 @@ runall a.py
 run 0
 run 5
 run --sample 5
+run --debug 0
 ```
 
 ---
@@ -116,11 +121,14 @@ pyall --clean abc439_a
 - NG の diff を `failures/` に保存
 - `--clean` で `failures/` を削除
 - 全サンプル OK のときは `failures/` を自動削除
+- `run` / `runall` 経由の C++ RE は debug build で自動再実行される
+- 直接使う場合も `ioall --debug-source a` のように source 名を渡すと同じ診断を出せる
 
 例:
 ```bash
 ioall
 ioall --clean
+ioall --debug-source a
 ```
 
 ---
@@ -220,7 +228,9 @@ abc365_b/
 指定した C++ ファイルをコンパイルし `a.out` を生成する。  
 `atcoder` が含まれる場合は `./ac-library` を include する。  
 `gmpxx.h` が含まれる場合は `-lgmpxx -lgmp` を付与する。  
-`debug` 指定時は sanitizer を有効化する。
+`debug` 指定時は sanitizer、`_GLIBCXX_DEBUG`、デバッグ情報を有効化する。  
+`trace` 指定時は sanitizer とデバッグ情報を有効化し、ユーザーコードの行番号特定を優先する。  
+debug build の出力先は通常 `a.out`、`CPP_OUT=./a.debug.out bd a debug` のように環境変数で変更できる。
 
 ---
 
@@ -230,6 +240,7 @@ abc365_b/
 bd a
 bd
 bd a debug
+bd a trace
 ```
 
 ---
@@ -290,3 +301,9 @@ for (auto e : WG[u]) {
     `run a` / `runall a` / `pyall a` のように明示指定する。
 - **コピーされない**
   - `xclip` が必要。無い場合は警告を出してコピーをスキップする。
+- **`Segmentation fault` / `[RE]` の原因が分からない**
+  - `run 0` / `runall` 経由なら RE 時に debug build で自動再実行する。  
+    `配列・vector などの範囲外アクセス`, `0除算`, `符号付き整数オーバーフロー`, `nullptr 参照` などは原因候補として表示される。
+  - 行番号が debug build だけで取れない場合は trace build でもう一度走らせ、`location:` と該当コード行を表示する。
+  - 次回実行で RE が消えた場合は `failures/*.err`, `a.debug.out`, `a.trace.out` を自動削除する。
+  - 最初から範囲チェック付きで走らせたい場合は `run --debug 0` / `runall --debug` を使う。
