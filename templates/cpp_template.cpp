@@ -741,6 +741,11 @@ struct WeightedGraph
     {
         int to;
         W w;
+
+        friend ostream &operator<<(ostream &os, const Edge &e)
+        {
+            return os << e.to << ':' << e.w;
+        }
     };
 
     int n;
