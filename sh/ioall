@@ -121,6 +121,27 @@ cleanup_case_artifacts() {
     fi
 }
 
+normalize_output() {
+    local file="$1"
+
+    LC_ALL=C perl -0777 -pe '
+        s/[\t\r ]+(?=\n|\z)//g;
+        s/\n*\z//;
+        $_ .= "\n" if length;
+    ' "$file"
+}
+
+outputs_match() {
+    local expected="$1"
+    local actual="$2"
+
+    if cmp -s "$expected" "$actual"; then
+        return 0
+    fi
+
+    cmp -s <(normalize_output "$expected") <(normalize_output "$actual")
+}
+
 build_debug_binary() {
     if $DEBUG_READY; then
         return 0
@@ -274,7 +295,7 @@ run_case() {
     fi
 
     if [ -f "$outfile" ]; then
-        if diff -u "$outfile" "$tmpfile" > /dev/null; then
+        if outputs_match "$outfile" "$tmpfile"; then
             echo "[AC]   $label (${elapsed} ms)"
             cleanup_case_artifacts "$label"
         else

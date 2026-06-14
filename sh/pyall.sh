@@ -86,6 +86,27 @@ shopt -s nullglob
 OK_ALL=true
 SINGLE=false
 
+normalize_output() {
+    local file="$1"
+
+    LC_ALL=C perl -0777 -pe '
+        s/[\t\r ]+(?=\n|\z)//g;
+        s/\n*\z//;
+        $_ .= "\n" if length;
+    ' "$file"
+}
+
+outputs_match() {
+    local expected="$1"
+    local actual="$2"
+
+    if cmp -s "$expected" "$actual"; then
+        return 0
+    fi
+
+    cmp -s <(normalize_output "$expected") <(normalize_output "$actual")
+}
+
 run_case() {
     local infile="$1"
     local outfile="$2"
@@ -105,7 +126,7 @@ run_case() {
     fi
 
     if [ -f "$outfile" ]; then
-        if diff -u "$outfile" "$tmpfile" > /dev/null; then
+        if outputs_match "$outfile" "$tmpfile"; then
             echo "[AC]   $label (${elapsed} ms)"
         else
             echo "[WA]   $label (${elapsed} ms)"

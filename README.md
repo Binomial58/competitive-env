@@ -60,6 +60,7 @@ run --debug
 概要:
 - C++: `build.sh` → `ioall`
 - Python: `pyall`
+- AtCoder と同様に、各行末の空白とファイル末尾の改行・空行の差を無視して比較する
 - すべて通過したら **ソースを自動コピー**
 - C++ が RE した場合は sanitizer 付き debug build で同じ入力を再実行し、原因候補・該当行を表示
 
@@ -96,6 +97,7 @@ run --debug 0
 
 概要:
 - `samples/` の `.in/.out` を全実行
+- 各行末の空白とファイル末尾の改行・空行の差を無視して比較
 - 実行時間を ms 表示
 - すべて通過したら **ソースを自動コピー**
 - NG の diff を `failures/` に保存
@@ -117,6 +119,7 @@ pyall --clean abc439_a
 
 概要:
 - `samples/` の `.in/.out` を全実行
+- 各行末の空白とファイル末尾の改行・空行の差を無視して比較
 - 実行時間を ms 表示
 - NG の diff を `failures/` に保存
 - `--clean` で `failures/` を削除
