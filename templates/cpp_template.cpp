@@ -2,6 +2,7 @@
 using namespace std;
 
 using ll = long long;
+using ld = long double;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
@@ -680,6 +681,12 @@ template <class T>
 long long sum(const vector<T> &v)
 {
     return accumulate(v.begin(), v.end(), 0LL);
+}
+
+template <class T>
+ld sum_ld(const vector<T> &v)
+{
+    return accumulate(v.begin(), v.end(), 0.0L);
 }
 
 template <class T, class AllocA, class AllocB>
