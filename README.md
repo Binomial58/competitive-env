@@ -17,6 +17,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── pyall.sh    （Python 全サンプル実行）
     ├── pyrun       （Python 単体実行）
     ├── run         （自動判別で単体実行）
+    ├── runi        （自動判別で対話実行）
     ├── runall      （自動判別で全サンプル実行）
     └── mkprob.sh   （問題テンプレ生成）
 ```
@@ -52,6 +53,28 @@ run a.cpp
 run a.py
 run --debug
 ```
+
+---
+
+## runi：対話実行（C++ / Python）
+
+概要:
+- C++: `build.sh` → `./a.out` を直接実行
+- Python: `python3` で直接実行
+- `in.txt` は使わず、標準入力をターミナルにつないだままにする
+- `run --interactive` でも同じ実行になる
+
+例:
+```bash
+runi
+runi a
+runi a.cpp
+runi a.py
+runi --debug
+run --interactive a
+```
+
+インタラクティブ問題では、出力ごとに `cout << x << endl;` または `cout << x << '\n' << flush;` のように flush する。
 
 ---
 
