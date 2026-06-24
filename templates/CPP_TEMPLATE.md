@@ -17,8 +17,11 @@ using namespace std;
 
 ```cpp
 using ll = long long;
+using ld = long double;
+using i128 = __int128_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
+using u128 = __uint128_t;
 ```
 
 ### ループ/汎用マクロ
@@ -53,7 +56,7 @@ const ll MOD2 = 1000000007;
 `cin` ベースの入力関数です。可変引数でまとめて読めます。
 
 対応型:
-- 基本型（`int`, `ll`, `double`, `string` など）
+- 基本型（`int`, `ll`, `ld`, `i128`, `u128`, `double`, `string` など）
 - `pair`
 - `tuple`
 - `array`
@@ -65,19 +68,23 @@ const ll MOD2 = 1000000007;
 ```cpp
 int n;
 ll x;
+ld y;
+i128 z;
 string s;
-read(n, x, s);
+read(n, x, y, z, s);
 
 vector<int> a(n);
 read(a);
 ```
+
+`i128` / `u128` は10進整数文字列として読み込みます。
 
 ### 出力: `print(...)`
 
 `print(a, b, c)` は空白区切りで出力し、最後に改行します。
 
 内部 `wt(...)` が対応している型:
-- 基本型
+- 基本型（`i128` / `u128` を含む）
 - `val()` を持つ型（`Modint9` など）は `val()` を出力
 - `string`, `const char*`
 - `pair`, `tuple`
@@ -90,6 +97,8 @@ read(a);
 
 小数は常に小数点以下10桁で固定表示:
 - `float`, `double`, `long double`: `fixed << setprecision(10)`
+
+`i128` / `u128` は10進整数文字列として出力します。`vector<i128>` や `pair<i128, u128>` など、コンテナ内の128bit整数も同じルールで出力できます。
 
 ### デバッグ出力: `printd(x)`
 
@@ -115,6 +124,9 @@ printd(A); // A:1 2 3
 #define STR(...)  string __VA_ARGS__; read(__VA_ARGS__)
 #define CHAR(...) char __VA_ARGS__; read(__VA_ARGS__)
 #define DBL(...)  double __VA_ARGS__; read(__VA_ARGS__)
+#define LD(...)   ld __VA_ARGS__; read(__VA_ARGS__)
+#define I128(...) i128 __VA_ARGS__; read(__VA_ARGS__)
+#define U128(...) u128 __VA_ARGS__; read(__VA_ARGS__)
 
 #define VEC(type, name, size) \
     vector<type> name(size); \
@@ -140,6 +152,8 @@ printd(A); // A:1 2 3
 
 ```cpp
 INT(n, m);
+LD(rate);
+I128(big);
 VEC(int, a, n);
 SET(int, s, n);               // 重複は自動で1つにまとまる
 MSET(int, ms, n);             // 重複も保持する

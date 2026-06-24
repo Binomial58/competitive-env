@@ -3,8 +3,10 @@ using namespace std;
 
 using ll = long long;
 using ld = long double;
+using i128 = __int128_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
+using u128 = __uint128_t;
 
 // for文の短縮マクロ
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
@@ -30,6 +32,37 @@ namespace fastio
     // 入力
     template <class T>
     void read(T &x) { cin >> x; }
+
+    inline void read(i128 &x)
+    {
+        string s;
+        cin >> s;
+        bool neg = false;
+        size_t i = 0;
+        if (!s.empty() && (s[0] == '-' || s[0] == '+'))
+        {
+            neg = (s[0] == '-');
+            i = 1;
+        }
+        u128 v = 0;
+        for (; i < s.size(); i++)
+            v = v * 10 + (s[i] - '0');
+        if (neg)
+            x = (v == 0) ? 0 : -i128(v - 1) - 1;
+        else
+            x = i128(v);
+    }
+
+    inline void read(u128 &x)
+    {
+        string s;
+        cin >> s;
+        size_t i = (!s.empty() && s[0] == '+') ? 1 : 0;
+        u128 v = 0;
+        for (; i < s.size(); i++)
+            v = v * 10 + (s[i] - '0');
+        x = v;
+    }
 
     template <class A, class B>
     void read(pair<A, B> &p)
@@ -101,6 +134,33 @@ namespace fastio
         if constexpr (sizeof...(Tail))
             read(tail...);
     }
+
+    inline string to_decimal_string(u128 x)
+    {
+        if (x == 0)
+            return "0";
+        string s;
+        while (x > 0)
+        {
+            s.push_back(char('0' + x % 10));
+            x /= 10;
+        }
+        reverse(s.begin(), s.end());
+        return s;
+    }
+
+    inline string to_decimal_string(i128 x)
+    {
+        if (x < 0)
+        {
+            u128 y = u128(-(x + 1)) + 1;
+            return "-" + to_decimal_string(y);
+        }
+        return to_decimal_string(u128(x));
+    }
+
+    inline void wt(i128 x) { cout << to_decimal_string(x); }
+    inline void wt(u128 x) { cout << to_decimal_string(x); }
 
     // 基本型
     template <class T>
@@ -347,6 +407,15 @@ using fastio::read_set;
     read(__VA_ARGS__)
 #define DBL(...)      \
     double __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define LD(...)   \
+    ld __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define I128(...)   \
+    i128 __VA_ARGS__; \
+    read(__VA_ARGS__)
+#define U128(...)   \
+    u128 __VA_ARGS__; \
     read(__VA_ARGS__)
 #define printd(x) fastio::printd_impl(#x, (x))
 #define VEC(type, name, size) \
