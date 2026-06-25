@@ -166,37 +166,7 @@ VVI(ll, cost, n, n, (1LL << 60)); // 任意の初期値
 
 ## 4. `set` / `multiset` 補助（近傍取得・削除）
 
-### `set` の Python 風集合演算
-
-`std::set` 同士で以下の演算子が使えます（`multiset` は対象外）。
-
-- `A | B`: 和集合
-- `A & B`: 積集合
-- `A - B`: 差集合
-- `A ^ B`: 対称差
-- `A |= B`, `A &= B`, `A -= B`, `A ^= B`: 破壊的更新
-
-あわせて、判定関数も定義されています。
-
-- `is_subset(a, b)`: `a ⊆ b`
-- `is_superset(a, b)`: `a ⊇ b`
-- `is_disjoint(a, b)`: `a` と `b` が互いに素
-
-例:
-
-```cpp
-set<int> A = {1, 2, 3};
-set<int> B = {3, 4, 5};
-
-auto uni = A | B; // {1,2,3,4,5}
-auto inter = A & B; // {3}
-auto diff = A - B; // {1,2}
-auto sym = A ^ B; // {1,2,4,5}
-
-if (is_subset(inter, uni)) {
-    print("ok");
-}
-```
+`std::set` の Python 風集合演算子はテンプレートから外し、ライブラリ `library/cpp/data_structure/set_operations.hpp` に分離しています。
 
 ### 近傍取得（iterator）
 
