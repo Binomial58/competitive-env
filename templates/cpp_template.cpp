@@ -387,54 +387,54 @@ using fastio::read_multiset;
 using fastio::read_set;
 
 // 宣言+入力を1行で書くマクロ
-#define INT(...)   \
+#define INT(...)     \
     int __VA_ARGS__; \
     read(__VA_ARGS__)
-#define LL(...)   \
+#define LL(...)     \
     ll __VA_ARGS__; \
     read(__VA_ARGS__)
-#define U32(...)   \
+#define U32(...)     \
     u32 __VA_ARGS__; \
     read(__VA_ARGS__)
-#define U64(...)   \
+#define U64(...)     \
     u64 __VA_ARGS__; \
     read(__VA_ARGS__)
-#define STR(...)      \
+#define STR(...)        \
     string __VA_ARGS__; \
     read(__VA_ARGS__)
-#define CHAR(...)   \
+#define CHAR(...)     \
     char __VA_ARGS__; \
     read(__VA_ARGS__)
-#define DBL(...)      \
+#define DBL(...)        \
     double __VA_ARGS__; \
     read(__VA_ARGS__)
-#define LD(...)   \
+#define LD(...)     \
     ld __VA_ARGS__; \
     read(__VA_ARGS__)
-#define I128(...)   \
+#define I128(...)     \
     i128 __VA_ARGS__; \
     read(__VA_ARGS__)
-#define U128(...)   \
+#define U128(...)     \
     u128 __VA_ARGS__; \
     read(__VA_ARGS__)
 #define printd(x) fastio::printd_impl(#x, (x))
 #define VEC(type, name, size) \
-    vector<type> name(size);    \
+    vector<type> name(size);  \
     read(name)
 #define SET(type, name, size) \
     set<type> name = read_set<type>(size)
 #define MSET(type, name, size) \
     multiset<type> name = read_multiset<type>(size)
-#define VV(type, name, h, w)                     \
+#define VV(type, name, h, w)                       \
     vector<vector<type>> name(h, vector<type>(w)); \
     read(name)
 #define VEC0(type, name, size) \
     vector<type> name(size)
-#define VV0(type, name, h, w)                     \
+#define VV0(type, name, h, w) \
     vector<vector<type>> name(h, vector<type>(w))
 #define VECI(type, name, size, init) \
     vector<type> name(size, init)
-#define VVI(type, name, h, w, init)                     \
+#define VVI(type, name, h, w, init) \
     vector<vector<type>> name(h, vector<type>(w, init))
 
 // orderedコンテナ(set/multiset等)の境界検索ヘルパー
@@ -509,7 +509,6 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define DISCARD_ONE(c, x) discard_one((c), (x))
 #define DISCARD_ALL(c, x) discard_all((c), (x))
 
-// 二分探索ヘルパー（Pythonのbisect相当）
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
 {
@@ -522,7 +521,6 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
-// 整数累乗（繰り返し二乗法）
 long long ipow(long long a, long long e)
 {
     long long r = 1;
