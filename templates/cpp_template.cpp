@@ -521,6 +521,46 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
+// argsort(v): vを昇順に見たときのindex列
+// apply_order(order, vs...): order[i]番目の要素を新しいi番目にする
+template <class T, class Alloc, class Compare = less<T>>
+vector<int> argsort(const vector<T, Alloc> &v, Compare comp = Compare())
+{
+    int n = (int)v.size();
+    vector<int> order(n);
+    iota(all(order), 0);
+    stable_sort(all(order), [&](int i, int j)
+                { return comp(v[i], v[j]); });
+    return order;
+}
+
+template <class T, class Alloc>
+void apply_order_one(const vector<int> &order, vector<T, Alloc> &v)
+{
+    assert(order.size() == v.size());
+    vector<T, Alloc> res(v.get_allocator());
+    res.reserve(v.size());
+    for (int i : order)
+    {
+        assert(0 <= i && i < (int)v.size());
+        res.push_back(v[i]);
+    }
+    v.swap(res);
+}
+
+template <class... Vecs>
+void apply_order(const vector<int> &order, Vecs &...vs)
+{
+    (apply_order_one(order, vs), ...);
+}
+
+template <class Key, class Alloc, class... Vecs>
+void sort_by_key(vector<Key, Alloc> &key, Vecs &...vs)
+{
+    vector<int> order = argsort(key);
+    apply_order(order, key, vs...);
+}
+
 long long ipow(long long a, long long e)
 {
     long long r = 1;

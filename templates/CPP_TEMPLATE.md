@@ -264,6 +264,62 @@ int bisect_right(const vector<T> &v, const T &x);
 - `bisect_left`: `x` 以上の最初の位置
 - `bisect_right`: `x` より大きい最初の位置
 
+### `argsort` / 並び順の適用
+
+```cpp
+template <class T, class Alloc, class Compare = less<T>>
+vector<int> argsort(const vector<T, Alloc> &v, Compare comp = Compare());
+
+template <class... Vecs>
+void apply_order(const vector<int> &order, Vecs &...vs);
+
+template <class Key, class Alloc, class... Vecs>
+void sort_by_key(vector<Key, Alloc> &key, Vecs &...vs);
+```
+
+用途:
+- `argsort(v)`: `v` を昇順に見たときの index 列を返す
+- `argsort(v, comp)`: 比較関数 `comp` の順に見たときの index 列を返す
+- `apply_order(order, a, b, ...)`: `order[i]` 番目の要素を新しい `i` 番目にする
+- `sort_by_key(key, a, b, ...)`: `key` を基準にして、対応する複数の `vector` をまとめて並べ替える
+
+`argsort` は `stable_sort` を使うため、同じ key の相対順序は保たれます。  
+`apply_order` はすべての `vector` の長さが `order.size()` と一致していることを `assert` で確認します。
+
+例: 1本の `vector` から並び順だけ作る
+
+```cpp
+vector<ll> a = {30, 10, 20};
+vector<int> order = argsort(a); // {1, 2, 0}
+```
+
+例: 1つの key で複数の `vector` を並べ替える
+
+```cpp
+vector<ll> x = {3, 1, 2};
+vector<string> name = {"c", "a", "b"};
+vector<ll> cost = {300, 100, 200};
+
+sort_by_key(x, name, cost);
+
+// x    = {1, 2, 3}
+// name = {"a", "b", "c"}
+// cost = {100, 200, 300}
+```
+
+例: 降順や独自の順序で並べ替える
+
+```cpp
+vector<ll> score = {80, 100, 90};
+vector<int> id = {0, 1, 2};
+
+auto order = argsort(score, greater<ll>());
+apply_order(order, score, id);
+
+// score = {100, 90, 80}
+// id    = {1, 2, 0}
+```
+
 ### べき乗
 
 ```cpp
