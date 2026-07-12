@@ -251,6 +251,30 @@ int cnt = DISCARD_ALL(ms, x); // multiset で全部
 
 ## 5. 補助関数
 
+### 整数平方根 / 平方数判定
+
+```cpp
+long long isqrt(long long n);
+bool is_square(long long n);
+```
+
+- `isqrt(n)`: `floor(sqrt(n))` を整数として返す（`0 <= n <= LLONG_MAX`）
+- `is_square(n)`: `n` が平方数なら `true`
+- 初期値には `sqrtl` を使い、浮動小数点誤差によるずれを `while` で補正する
+- `r * r` が `long long` を超え得るため、比較は `i128` に拡張して行う
+
+例:
+
+```cpp
+ll n;
+cin >> n;
+
+ll side = isqrt(n);
+if (is_square(n)) {
+    // n is a square number
+}
+```
+
 ### 二分探索（`vector`）
 
 ```cpp

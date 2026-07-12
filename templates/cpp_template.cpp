@@ -509,6 +509,22 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define DISCARD_ONE(c, x) discard_one((c), (x))
 #define DISCARD_ALL(c, x) discard_all((c), (x))
 
+long long isqrt(long long n)
+{
+    long long r = sqrtl((long double)n);
+    while (i128(r + 1) * (r + 1) <= n)
+        r++;
+    while (i128(r) * r > n)
+        r--;
+    return r;
+}
+
+bool is_square(long long n)
+{
+    long long r = isqrt(n);
+    return i128(r) * r == n;
+}
+
 template <class T>
 int bisect_left(const vector<T> &v, const T &x)
 {
