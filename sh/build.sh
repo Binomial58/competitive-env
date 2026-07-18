@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 SOURCE_ARG="${1:-main}"
 SOURCE_FILE="${SOURCE_ARG%.cpp}.cpp"
@@ -20,8 +21,15 @@ for arg in "$@"; do
     esac
 done
 
-ATCODER_COUNT=$(grep -o "atcoder" "$SOURCE_FILE" 2>/dev/null | wc -l)
-GMP_COUNT=$(grep -o "gmpxx.h" "$SOURCE_FILE" 2>/dev/null | wc -l)
+USES_ATCODER=false
+if grep -Eq '#include *<atcoder|using namespace atcoder' "$SOURCE_FILE" 2>/dev/null; then
+    USES_ATCODER=true
+fi
+
+USES_GMP=false
+if grep -q "gmpxx.h" "$SOURCE_FILE" 2>/dev/null; then
+    USES_GMP=true
+fi
 
 case "$MODE" in
     debug)
@@ -38,11 +46,11 @@ case "$MODE" in
 esac
 LINK_FLAGS=""
 
-if [ "$ATCODER_COUNT" -ge 1 ]; then
+if $USES_ATCODER; then
     CXX_FLAGS+=" -I./ac-library"
 fi
 
-if [ "$GMP_COUNT" -ge 1 ]; then
+if $USES_GMP; then
     LINK_FLAGS+=" -lgmpxx -lgmp"
 fi
 

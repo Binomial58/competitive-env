@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # 使い方チェック
 if [ $# -lt 2 ]; then
