@@ -19,14 +19,17 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── run               （自動判別で単体実行）
     ├── runi              （自動判別で対話実行）
     ├── runall            （自動判別で全サンプル実行）
-    ├── mkprob.sh         （問題テンプレ生成）
+    ├── mkprob.sh         （問題テンプレ生成: 1問）
+    ├── mkcontest         （問題テンプレ生成: コンテスト単位で一括）
+    ├── mkcontest.sh
     ├── resolve_target.sh （内部共有: run/runall/runi の対象ファイル自動判定）
     ├── io_compare.sh     （内部共有: ioall/pyall.sh の出力比較・サンプル解決）
+    ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
     └── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
 ```
 
-`resolve_target.sh` / `io_compare.sh` / `cpp_re_report.sh` はコマンドとして直接実行するものではなく、
-上記スクリプトから `source` される共通関数ライブラリ。
+`resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` はコマンドとして
+直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
 
 `.zshrc` で PATH を通して使う想定。
 
@@ -252,6 +255,50 @@ mkprob py abc365_b
 ```text
 abc365_b/
 └── abc365_b.py
+```
+
+---
+
+# mkcontest：コンテスト単位で問題を一括生成
+
+## 概要
+
+`mkprob` はそのまま（過去問を1問だけ解くときに使う）、  
+コンテスト本番で複数問まとめて用意したいときは `mkcontest` を使う。  
+内部的には `mkprob` と同じ生成ロジック（`sh/mkprob_core.sh`）を問題数ぶん繰り返し呼ぶだけ。
+
+---
+
+## 仕様
+
+- フォルダ名：`<contest_prefix>_<suffix>`（`mkprob` と同じ命名規則の兄弟フォルダ）
+- 個数指定 or サフィックス直接指定のどちらかを選べる
+  - 個数指定（1〜26の整数1つ）: `a` から順に `<count>` 問ぶん生成
+  - サフィックス直接指定（2つ以上、または数字以外を含む）: 指定した順にそのまま生成
+- 既に存在するフォルダはスキップし、他のフォルダの生成は継続する
+  - 1件でもスキップがあれば最後に一覧を表示し、終了コード 1 を返す
+
+---
+
+## 使い方
+
+```bash
+mkcontest cpp abc468 7        # abc468_a 〜 abc468_g を作成
+mkcontest cpp abc468 a b c ex # abc468_a / abc468_b / abc468_c / abc468_ex を作成
+mkcontest py arc199 6         # arc199_a 〜 arc199_f を作成
+```
+
+生成される構成（`mkcontest cpp abc468 7` の場合）：
+```text
+abc468_a/
+├── abc468_a.cpp
+├── in.txt
+└── out.txt
+abc468_b/
+├── abc468_b.cpp
+├── in.txt
+└── out.txt
+...(abc468_g まで同様)
 ```
 
 ---

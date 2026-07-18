@@ -14,7 +14,7 @@
 
 - `export PATH="$HOME/Github/competitive-env/sh:$PATH"`
 - これにより `competitive-env/sh` 配下のコマンドが直接実行可能
-- ただし `resolve_target.sh` / `io_compare.sh` / `cpp_re_report.sh` は
+- ただし `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` は
   他スクリプトから `source` される内部専用ライブラリで、直接コマンドとして
   呼び出すものではない
 
@@ -30,6 +30,8 @@
 
 - `mkprob <lang> <problem>` 実行後、生成した `<problem>` ディレクトリへ自動で `cd`
 - 実体コマンドは `command mkprob "$@"` で呼び出し
+- `mkcontest`（コンテスト一括生成）は複数ディレクトリを同時に作るため、
+  同様の auto-cd ラッパーは無し。`.zshrc` 側の変更は不要
 
 ## Notes
 
