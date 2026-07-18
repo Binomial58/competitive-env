@@ -68,6 +68,9 @@ if ! [[ "$SEED_START" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+# resolve_time_limit() は TL_MS 環境変数を最優先で見るので、--tl の値を渡す。
+TL_MS="$TL"
+
 MAIN_TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
 GEN_TARGET="$(resolve_target "gen")" || {
     echo "  argv[1] にシードを受け取り、標準出力にランダム入力を出力するジェネレータを用意してください。" >&2
@@ -183,9 +186,6 @@ for ((i = 0; i < COUNT; i++)); do
     fi
 
     tl="$(resolve_time_limit || true)"
-    if [ -z "$tl" ] && [ -n "$TL" ]; then
-        tl="$TL"
-    fi
     if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
         echo "[TLE]  seed=$seed (${elapsed} ms > ${tl} ms)"
         save_failure "main が制限時間を超過(${elapsed} ms > ${tl} ms)"

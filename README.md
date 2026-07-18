@@ -48,19 +48,25 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 
 ## 実行時間制限（TLE 検出）
 
-`run` / `runall` / `ioall` / `pyall` / `io` は、実行時間が制限を超えたら
-`[AC]`/`[RUN]` の代わりに `[TLE]` と表示し、失敗扱いにする。
+`run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、実行時間が
+制限を超えたら `[AC]`/`[RUN]` の代わりに `[TLE]` と表示し、失敗扱いにする。
+**デフォルトは AtCoder の標準的な制限時間 2000ms** で、何も指定しなくても
+常に判定される。
 
 制限時間(ms)は次の優先順で解決される:
 
 1) `--tl <ms>` オプション（明示指定、その場限り）
-2) 問題フォルダ直下の `tl.txt`（1行に整数を書くだけ）
-3) どちらも無ければ TLE 判定はせず、従来通り時間を表示するだけ
+2) 問題フォルダ直下の `tl.txt`（1行に整数を書くだけ。制限時間が
+   2000ms でない特殊な問題のときに使う）
+3) どちらも無ければ既定値 2000ms
 
 ```bash
-echo 2000 > tl.txt   # 以後このフォルダでは 2000ms 制限になる
-run --tl 2000        # その場限りで 2000ms 制限にする(tl.txt より優先)
+echo 3000 > tl.txt   # この問題だけ制限時間が 3000ms の場合
+run --tl 3000        # その場限りで 3000ms 制限にする(tl.txt より優先)
 ```
+
+既定値そのものを変えたい場合は環境変数 `DEFAULT_TL_MS` を設定する
+（`.zshrc` などで `export DEFAULT_TL_MS=3000` のように）。
 
 ---
 
@@ -155,7 +161,7 @@ run --debug 0
 - `--clean` で `failures/` を削除
 - 全サンプル OK のときは `failures/` を自動削除
 - `--sample N` でサンプル1件だけ実行（オプションと対象名はどちらを先に書いても良い）
-- `--tl N` または `tl.txt` で実行時間制限(ms)を指定すると `[TLE]` 判定になる
+- 実行時間制限は既定 2000ms。`--tl N` や `tl.txt` でこの問題だけ変更できる
 
 例:
 ```bash
@@ -182,7 +188,7 @@ pyall --tl 2000 a
 - 全サンプル OK のときは `failures/` を自動削除
 - `run` / `runall` 経由の C++ RE は debug build で自動再実行される
 - 直接使う場合も `ioall --debug-source a` のように source 名を渡すと同じ診断を出せる
-- `--tl N` または `tl.txt` で実行時間制限(ms)を指定すると `[TLE]` 判定になる
+- 実行時間制限は既定 2000ms。`--tl N` や `tl.txt` でこの問題だけ変更できる
 
 例:
 ```bash
@@ -311,9 +317,9 @@ gen/brute は Python、など）。
 - `seed` を `--seed-start` から1つずつ増やしながら `--count` 回繰り返す
 - 各回: `gen <seed>` → 入力 → `main` と `brute` それぞれに投入 → 出力比較
   （行末空白・末尾改行の差は無視。`ioall`/`pyall` と同じ比較ロジック）
-- 不一致 / `main` の異常終了(RE) / 制限時間超過(TLE、`--tl` か `tl.txt`)の
-  いずれかが起きた時点で停止し、`stress_fail/` に `in.txt` / `main_out.txt` /
-  `brute_out.txt` を保存する
+- 不一致 / `main` の異常終了(RE) / 制限時間超過(TLE、既定 2000ms。
+  `--tl` か `tl.txt` で変更可)のいずれかが起きた時点で停止し、
+  `stress_fail/` に `in.txt` / `main_out.txt` / `brute_out.txt` を保存する
 - `brute` 自体が異常終了した場合は `brute` 側の不具合として個別に報告する
 - `--debug` を付けると `main` だけ sanitizer 付き debug build でテストする
   （`gen`/`brute` は常に release build）

@@ -49,8 +49,14 @@ resolve_sample_input() {
     return 1
 }
 
-# 実行時間制限(ms)を解決する。優先順位: TL_MS 環境変数 > ./tl.txt
-# どちらも無ければ何も出力せず失敗を返す(TLE 判定なしで従来通り動作)。
+# AtCoder の標準的な制限時間。tl.txt も --tl も無い問題はこれを使う。
+# 別の値をデフォルトにしたければ環境変数 DEFAULT_TL_MS で上書きできる。
+DEFAULT_TL_MS="${DEFAULT_TL_MS:-2000}"
+
+# 実行時間制限(ms)を解決する。優先順位:
+#   1) TL_MS 環境変数(--tl オプションでその場限り指定)
+#   2) ./tl.txt (問題ごとに制限時間が違う場合の個別指定)
+#   3) DEFAULT_TL_MS (通常は 2000ms)
 resolve_time_limit() {
     if [ -n "${TL_MS:-}" ] && [[ "$TL_MS" =~ ^[0-9]+$ ]]; then
         echo "$TL_MS"
@@ -66,5 +72,6 @@ resolve_time_limit() {
         fi
     fi
 
-    return 1
+    echo "$DEFAULT_TL_MS"
+    return 0
 }
