@@ -24,6 +24,12 @@ while [ $# -gt 0 ]; do
             SAMPLE_ONLY="$1"
             shift
             ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || { echo "error: --tl requires a number(ms)." >&2; exit 1; }
+            TL_MS="$1"
+            shift
+            ;;
         --)
             shift
             break
@@ -95,6 +101,7 @@ fi
 shopt -s nullglob
 OK_ALL=true
 SINGLE=false
+HAD_TLE=false
 
 run_case() {
     local infile="$1"
@@ -114,11 +121,23 @@ run_case() {
         cat "$tmpfile"
     fi
 
+    local tl tle_note=""
+    tl="$(resolve_time_limit || true)"
+    if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
+        tle_note=" [TLE > ${tl} ms]"
+        HAD_TLE=true
+    fi
+
     if [ -f "$outfile" ]; then
         if outputs_match "$outfile" "$tmpfile"; then
-            echo "[AC]   $label (${elapsed} ms)"
+            if [ -n "$tle_note" ]; then
+                echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+                OK_ALL=false
+            else
+                echo "[AC]   $label (${elapsed} ms)"
+            fi
         else
-            echo "[WA]   $label (${elapsed} ms)"
+            echo "[WA]   $label (${elapsed} ms)${tle_note}"
             mkdir -p "$FAIL_DIR"
             if $NO_DIFF; then
                 diff -u "$outfile" "$tmpfile" > "$difffile"
@@ -128,7 +147,12 @@ run_case() {
             OK_ALL=false
         fi
     else
-        echo "[RUN]  $label (${elapsed} ms)"
+        if [ -n "$tle_note" ]; then
+            echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+            OK_ALL=false
+        else
+            echo "[RUN]  $label (${elapsed} ms)"
+        fi
         if ! $SINGLE; then
             cat "$tmpfile"
         fi
@@ -192,7 +216,11 @@ else
     if $SINGLE; then
         :
     else
-        echo "=== 一部WA ==="
+        if $HAD_TLE; then
+            echo "=== 一部TLE ==="
+        else
+            echo "=== 一部WA ==="
+        fi
     fi
 fi
 

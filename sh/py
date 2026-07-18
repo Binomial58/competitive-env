@@ -4,13 +4,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: py [sample_number] [source_name]" >&2
-    echo "       py [--sample N] [source_name]" >&2
+    echo "usage: py [--tl ms] [sample_number] [source_name]" >&2
+    echo "       py [--tl ms] [--sample N] [source_name]" >&2
     exit 1
 }
 
 SAMPLE_ONLY=""
 SOURCE_ARG=""
+TL=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -18,6 +19,12 @@ while [ $# -gt 0 ]; do
             shift
             [ $# -gt 0 ] || usage
             SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || usage
+            TL="$1"
             shift
             ;;
         --help|-h)
@@ -51,9 +58,9 @@ fi
 
 if [ -n "$SAMPLE_ONLY" ]; then
     if [ -n "$SOURCE_ARG" ]; then
-        exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$SOURCE_ARG"
+        TL_MS="$TL" exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$SOURCE_ARG"
     else
-        exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY"
+        TL_MS="$TL" exec "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY"
     fi
 else
     if [ -n "$SOURCE_ARG" ]; then

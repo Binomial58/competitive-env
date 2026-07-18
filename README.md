@@ -22,8 +22,10 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── mkprob.sh         （問題テンプレ生成: 1問）
     ├── mkcontest         （問題テンプレ生成: コンテスト単位で一括）
     ├── mkcontest.sh
-    ├── resolve_target.sh （内部共有: run/runall/runi の対象ファイル自動判定）
-    ├── io_compare.sh     （内部共有: ioall/pyall.sh の出力比較・サンプル解決）
+    ├── stress            （ランダムテスト: gen/brute と main を自動比較）
+    ├── stress.sh
+    ├── resolve_target.sh （内部共有: run/runall/runi/stress の対象ファイル自動判定）
+    ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・サンプル解決・TL 解決）
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
     └── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
 ```
@@ -47,6 +49,30 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 
 ---
 
+## 実行時間制限（TLE 検出）
+
+`run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、実行時間が
+制限を超えたら `[AC]`/`[RUN]` の代わりに `[TLE]` と表示し、失敗扱いにする。
+**デフォルトは AtCoder の標準的な制限時間 2000ms** で、何も指定しなくても
+常に判定される。
+
+制限時間(ms)は次の優先順で解決される:
+
+1) `--tl <ms>` オプション（明示指定、その場限り）
+2) 問題フォルダ直下の `tl.txt`（1行に整数を書くだけ。制限時間が
+   2000ms でない特殊な問題のときに使う）
+3) どちらも無ければ既定値 2000ms
+
+```bash
+echo 3000 > tl.txt   # この問題だけ制限時間が 3000ms の場合
+run --tl 3000        # その場限りで 3000ms 制限にする(tl.txt より優先)
+```
+
+既定値そのものを変えたい場合は環境変数 `DEFAULT_TL_MS` を設定する
+（`.zshrc` などで `export DEFAULT_TL_MS=3000` のように）。
+
+---
+
 ## run：単体実行（C++ / Python）
 
 概要:
@@ -61,6 +87,7 @@ run a
 run a.cpp
 run a.py
 run --debug
+run --tl 2000
 ```
 
 ---
@@ -103,6 +130,7 @@ runall a
 runall a.cpp
 runall a.py
 runall --debug
+runall --tl 2000
 ```
 
 ---
@@ -136,6 +164,7 @@ run --debug 0
 - `--clean` で `failures/` を削除
 - 全サンプル OK のときは `failures/` を自動削除
 - `--sample N` でサンプル1件だけ実行（オプションと対象名はどちらを先に書いても良い）
+- 実行時間制限は既定 2000ms。`--tl N` や `tl.txt` でこの問題だけ変更できる
 
 例:
 ```bash
@@ -146,6 +175,7 @@ pyall --clean
 pyall --clean abc439_a
 pyall --sample 5 a
 pyall a --sample 5
+pyall --tl 2000 a
 ```
 
 ---
@@ -161,12 +191,14 @@ pyall a --sample 5
 - 全サンプル OK のときは `failures/` を自動削除
 - `run` / `runall` 経由の C++ RE は debug build で自動再実行される
 - 直接使う場合も `ioall --debug-source a` のように source 名を渡すと同じ診断を出せる
+- 実行時間制限は既定 2000ms。`--tl N` や `tl.txt` でこの問題だけ変更できる
 
 例:
 ```bash
 ioall
 ioall --clean
 ioall --debug-source a
+ioall --tl 2000
 ```
 
 ---
@@ -202,6 +234,7 @@ py a
 py 1
 py 5
 py --sample 5 a
+py --tl 2000 --sample 5 a
 ```
 
 ---
@@ -309,6 +342,70 @@ abc468/
 │   ├── in.txt
 │   └── out.txt
 ...(abc468_g まで同様)
+```
+
+---
+
+# stress：ランダムテスト（stress test）
+
+## 概要
+
+ランダムな入力を生成し、遅くても確実に正しい参照実装（brute force）と
+本命の実装（main）の出力を自動で比較し続ける。一致しなくなった/main が
+異常終了した/制限時間を超えた時点で止まり、再現用の入力を保存する。
+WA の原因調査や、サンプルには出てこないコーナーケースの発見に使う。
+
+---
+
+## 仕様
+
+カレントディレクトリに以下が必要:
+
+- `gen.cpp` / `gen.py`：`argv[1]` にシード(整数)を受け取り、標準出力に
+  ランダムな入力を1件出力するジェネレータ
+- `brute.cpp` / `brute.py`：遅くても良いので確実に正しい参照実装
+- 本命の実装（`main_source` を省略した場合は `run`/`runall` と同じ自動判定）
+
+C++/Python は各ファイルごとに自由に混在できる（例: main は C++、
+gen/brute は Python、など）。
+
+動作:
+
+- `seed` を `--seed-start` から1つずつ増やしながら `--count` 回繰り返す
+- 各回: `gen <seed>` → 入力 → `main` と `brute` それぞれに投入 → 出力比較
+  （行末空白・末尾改行の差は無視。`ioall`/`pyall` と同じ比較ロジック）
+- 不一致 / `main` の異常終了(RE) / 制限時間超過(TLE、既定 2000ms。
+  `--tl` か `tl.txt` で変更可)のいずれかが起きた時点で停止し、
+  `stress_fail/` に `in.txt` / `main_out.txt` / `brute_out.txt` を保存する
+- `brute` 自体が異常終了した場合は `brute` 側の不具合として個別に報告する
+- `--debug` を付けると `main` だけ sanitizer 付き debug build でテストする
+  （`gen`/`brute` は常に release build）
+- 最後まで不一致が無ければ成功
+
+---
+
+## 使い方
+
+```bash
+stress                      # main_source は自動判定、100回
+stress a                    # main_source を明示指定
+stress --count 300          # 300回試す
+stress --seed-start 1000    # シードを 1000 から始める
+stress --debug              # main を sanitizer 付きでテスト
+stress --tl 2000            # main の実行時間制限を 2000ms にする
+```
+
+生成される構成（`sumprob/` に `sumprob.cpp` / `gen.cpp` / `brute.cpp` がある場合）：
+```text
+sumprob/
+├── sumprob.cpp
+├── gen.cpp
+├── brute.cpp
+└── stress_fail/       # 不一致が見つかった場合のみ生成
+    ├── in.txt
+    ├── main_out.txt
+    ├── main_err.txt    # main が RE した場合のみ
+    └── brute_out.txt
 ```
 
 ---

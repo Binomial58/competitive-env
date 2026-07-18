@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: run [--debug] [sample_number] [source_name]" >&2
-    echo "       run [--debug] [--sample N] [source_name]" >&2
+    echo "usage: run [--debug] [--tl ms] [sample_number] [source_name]" >&2
+    echo "       run [--debug] [--tl ms] [--sample N] [source_name]" >&2
     echo "       run --interactive [--debug] [source_name]" >&2
     exit 1
 }
@@ -15,6 +15,7 @@ usage() {
 SAMPLE_ONLY=""
 DEBUG=false
 INTERACTIVE=false
+TL=""
 
 SOURCE_ARG=""
 while [ $# -gt 0 ]; do
@@ -31,6 +32,12 @@ while [ $# -gt 0 ]; do
             shift
             [ $# -gt 0 ] || usage
             SAMPLE_ONLY="$1"
+            shift
+            ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || usage
+            TL="$1"
             shift
             ;;
         --help|-h)
@@ -91,13 +98,13 @@ if [[ "$TARGET" == *.cpp ]]; then
         "$SCRIPT_DIR/build.sh" "$SRC_BASE"
     fi
     if [ -n "$SAMPLE_ONLY" ]; then
-        CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}" --sample "$SAMPLE_ONLY"
+        CPP_EXE="$RUN_EXE" TL_MS="$TL" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}" --sample "$SAMPLE_ONLY"
     else
-        CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/io" term "${IO_DEBUG_ARGS[@]}"
+        CPP_EXE="$RUN_EXE" TL_MS="$TL" "$SCRIPT_DIR/io" term "${IO_DEBUG_ARGS[@]}"
     fi
 else
     if [ -n "$SAMPLE_ONLY" ]; then
-        "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$TARGET"
+        TL_MS="$TL" "$SCRIPT_DIR/pyall.sh" --sample "$SAMPLE_ONLY" "$TARGET"
     else
         python3 "$TARGET"
     fi
