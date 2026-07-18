@@ -14,7 +14,7 @@
 
 - `export PATH="$HOME/Github/competitive-env/sh:$PATH"`
 - これにより `competitive-env/sh` 配下のコマンドが直接実行可能
-- ただし `resolve_target.sh` / `io_compare.sh` / `cpp_re_report.sh` は
+- ただし `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` は
   他スクリプトから `source` される内部専用ライブラリで、直接コマンドとして
   呼び出すものではない
 
@@ -31,7 +31,20 @@
 - `mkprob <lang> <problem>` 実行後、生成した `<problem>` ディレクトリへ自動で `cd`
 - 実体コマンドは `command mkprob "$@"` で呼び出し
 
+### `mkcontest` function
+
+- `mkcontest <lang> <contest_prefix> ...` 実行後、**先頭の問題ディレクトリ**
+  （個数指定なら `..._a`、サフィックス直接指定なら先頭のサフィックス）へ自動で `cd`
+- 実体コマンド (`command mkcontest "$@"`) が `mktemp` で作った一時ファイルに
+  cd 先の絶対パスを書き出し、それを読んで `cd` する
+  （複数ディレクトリを作るため `mkprob` のように引数からそのまま cd 先を
+  決められず、実体コマンド側から一時ファイル経由で伝えている）
+
 ## Notes
 
 - `.zshrc` の大半は Oh My Zsh のデフォルトコメント
-- 実運用上重要なのは `PATH`・`command_not_found_handler`・`mkprob` 関数
+- 実運用上重要なのは `PATH`・`command_not_found_handler`・`mkprob`/`mkcontest` 関数
+- このリポジトリの `.zshrc` は `~/.zshrc` の手動同期コピー（symlink ではない）。
+  pnpm インストーラなど外部ツールが `~/.zshrc` に直接追記することがあるため、
+  両者は完全には一致しない場合がある。競技プログラミング関連の関数を
+  変更したときは、リポジトリ側だけでなく `~/.zshrc` 側にも反映が必要。

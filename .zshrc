@@ -130,3 +130,17 @@ mkprob() {
     cd "$prob" || return $?
   fi
 }
+
+# competitive-env: mkcontest auto-cd（最初の問題フォルダへ。通常は a）
+mkcontest() {
+  local cd_file target exit_status
+  cd_file="$(mktemp)"
+  MKCONTEST_CD_FILE="$cd_file" command mkcontest "$@"
+  exit_status=$?
+  target="$(cat "$cd_file" 2>/dev/null)"
+  rm -f "$cd_file"
+  if [ -n "$target" ] && [ -d "$target" ]; then
+    cd "$target" || return $?
+  fi
+  return $exit_status
+}
