@@ -24,6 +24,8 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── mkcontest.sh
     ├── stress            （ランダムテスト: gen/brute と main を自動比較）
     ├── stress.sh
+    ├── companion         （Competitive Companion 受信サーバ）
+    ├── companion.py
     ├── resolve_target.sh （内部共有: run/runall/runi/stress の対象ファイル自動判定）
     ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・サンプル解決・TL 解決）
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
@@ -406,6 +408,68 @@ sumprob/
     ├── main_out.txt
     ├── main_err.txt    # main が RE した場合のみ
     └── brute_out.txt
+```
+
+---
+
+# companion：Competitive Companion 連携
+
+## 概要
+
+ブラウザ拡張 [Competitive Companion](https://github.com/jmerle/competitive-companion)
+が問題ページから送信するサンプル・制限時間を、ローカルの受信サーバで
+受け取ってそのまま問題フォルダを組み立てる。手でサンプルをコピペする
+作業が不要になる。
+
+---
+
+## 仕様
+
+- デフォルトで `http://127.0.0.1:10043/` を listen する（Competitive
+  Companion 側のデフォルトポートと一致）
+- 拡張機能のアイコンをクリックした問題ページの URL から
+  `<contest_id>/<task_id>/`（例: `abc468/abc468_a/`）を組み立てる
+  - AtCoder の URL（`.../contests/<contest>/tasks/<task>`）を優先的に解釈
+  - それ以外のジャッジは `group`/`name` から簡易的にフォルダ名を作る
+- `<task_id>/` が無ければ `mkprob.sh <lang> <task_id>` でテンプレごと生成
+  （`--lang` で `cpp`/`py` を選択、デフォルト `cpp`）
+- 既に `<task_id>/` がある場合はテンプレは生成し直さず、
+  `samples/sample-N.in` / `sample-N.out` と `tl.txt`（制限時間, ms）だけ
+  上書きする（作業中のソースは壊さない）
+- 1つの契約ページに複数テストケースがある場合は `sample-1`, `sample-2`, ...
+  として保存し、`ioall`/`pyall`/`run`/`runall` からそのまま使える
+- `tl.txt` には制限時間(ms)を1行の整数で保存する（既定 2000ms の TLE 検出を
+  この問題の実際の制限時間で上書きする）
+
+---
+
+## 使い方
+
+作業したいディレクトリ（コンテストをまとめて置く場所）で起動しておく:
+
+```bash
+companion                    # ポート 10043, C++ でテンプレ生成
+companion --lang py          # Python でテンプレ生成
+companion --port 12345       # ポートを変更(拡張機能側の設定も合わせる)
+```
+
+起動したまま、AtCoder の問題ページ（または problems 一覧の "Parse all"）で
+拡張機能のアイコンをクリックすると、自動でフォルダが出来上がる。
+Ctrl-C で停止。
+
+生成される構成（例: `abc468` の A問題、テストケース2件、制限時間2000ms）：
+```text
+abc468/
+└── abc468_a/
+    ├── abc468_a.cpp
+    ├── in.txt
+    ├── out.txt
+    ├── tl.txt
+    └── samples/
+        ├── sample-1.in
+        ├── sample-1.out
+        ├── sample-2.in
+        └── sample-2.out
 ```
 
 ---
