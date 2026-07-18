@@ -31,8 +31,14 @@ while [ $# -gt 0 ]; do
             RUN_EXE="$1"
             shift
             ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || { echo "error: --tl requires a number(ms)."; exit 1; }
+            TL_MS="$1"
+            shift
+            ;;
         *)
-            echo "usage: io [term] [--debug-source source] [--no-debug-retry]" >&2
+            echo "usage: io [term] [--debug-source source] [--no-debug-retry] [--tl ms]" >&2
             exit 1
             ;;
     esac
@@ -49,6 +55,7 @@ if [ ! -f "./in.txt" ]; then
 fi
 
 . "$SCRIPT_DIR/cpp_re_report.sh"
+. "$SCRIPT_DIR/io_compare.sh"
 cpp_re_export_sanitizer_options
 
 run_executable() {
@@ -176,4 +183,10 @@ fi
 
 rm -f in.err
 cleanup_generated_binaries
+
+tl="$(resolve_time_limit || true)"
+if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
+    echo "[TLE]  ${elapsed} ms > ${tl} ms"
+    exit 1
+fi
 echo "[Time] ${elapsed} ms"

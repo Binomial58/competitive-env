@@ -48,6 +48,12 @@ while [ $# -gt 0 ]; do
             RUN_EXE="$1"
             shift
             ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || { echo "error: --tl requires a number(ms)."; exit 1; }
+            TL_MS="$1"
+            shift
+            ;;
         *)
             SAMPLE_ONLY="$1"
             shift
@@ -71,6 +77,7 @@ shopt -s nullglob
 OK_ALL=true
 SINGLE=false
 HAD_RE=false
+HAD_TLE=false
 
 run_executable() {
     local exe="$1"
@@ -275,12 +282,25 @@ run_case() {
         echo
     fi
 
+    local tl tle_note=""
+    tl="$(resolve_time_limit || true)"
+    if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
+        tle_note=" [TLE > ${tl} ms]"
+        HAD_TLE=true
+    fi
+
     if [ -f "$outfile" ]; then
         if outputs_match "$outfile" "$tmpfile"; then
-            echo "[AC]   $label (${elapsed} ms)"
-            cleanup_case_artifacts "$label"
+            if [ -n "$tle_note" ]; then
+                echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+                OK_ALL=false
+                cleanup_case_artifacts "$label"
+            else
+                echo "[AC]   $label (${elapsed} ms)"
+                cleanup_case_artifacts "$label"
+            fi
         else
-            echo "[WA]   $label (${elapsed} ms)"
+            echo "[WA]   $label (${elapsed} ms)${tle_note}"
             mkdir -p "$FAIL_DIR"
             if $NO_DIFF; then
                 diff -u "$outfile" "$tmpfile" > "$difffile"
@@ -290,7 +310,12 @@ run_case() {
             OK_ALL=false
         fi
     else
-        echo "[RUN]  $label (${elapsed} ms)"
+        if [ -n "$tle_note" ]; then
+            echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+            OK_ALL=false
+        else
+            echo "[RUN]  $label (${elapsed} ms)"
+        fi
         cleanup_case_artifacts "$label"
         if ! $SINGLE; then
             cat "$tmpfile"
@@ -347,6 +372,8 @@ else
     else
         if $HAD_RE; then
             echo "=== 一部RE ==="
+        elif $HAD_TLE; then
+            echo "=== 一部TLE ==="
         else
             echo "=== 一部WA ==="
         fi

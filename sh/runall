@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: runall [--debug] [source_name]" >&2
+    echo "usage: runall [--debug] [--tl ms] [source_name]" >&2
     exit 1
 }
 
@@ -12,11 +12,18 @@ usage() {
 
 DEBUG=false
 SOURCE_ARG=""
+TL=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --debug|-d)
             DEBUG=true
+            shift
+            ;;
+        --tl)
+            shift
+            [ $# -gt 0 ] || usage
+            TL="$1"
             shift
             ;;
         --help|-h)
@@ -46,7 +53,7 @@ if [[ "$TARGET" == *.cpp ]]; then
     else
         "$SCRIPT_DIR/build.sh" "$SRC_BASE"
     fi
-    CPP_EXE="$RUN_EXE" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}"
+    CPP_EXE="$RUN_EXE" TL_MS="$TL" "$SCRIPT_DIR/ioall" "${IO_DEBUG_ARGS[@]}"
     echo "=== コピーします ==="
     if command -v xclip >/dev/null 2>&1; then
         if xclip -selection clipboard < "$TARGET"; then
@@ -58,5 +65,5 @@ if [[ "$TARGET" == *.cpp ]]; then
         echo "warning: xclip not found; not copied."
     fi
 else
-    "$SCRIPT_DIR/pyall.sh" "$TARGET"
+    TL_MS="$TL" "$SCRIPT_DIR/pyall.sh" "$TARGET"
 fi
