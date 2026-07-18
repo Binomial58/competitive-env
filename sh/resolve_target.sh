@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# run / runall / runi で共通の対象ファイル自動判定ロジック。
+# 引数あり: 拡張子指定 or 拡張子なしの basename で .cpp/.py を判定
+# 引数なし: カレントディレクトリ名と同名のファイル → *.cpp/*.py が1つだけ、の順で判定
+resolve_target() {
+    local arg="${1:-}"
+    local base=""
+    local prefer=""
+
+    if [ -n "$arg" ]; then
+        case "$arg" in
+            *.cpp) prefer="cpp" ;;
+            *.py)  prefer="py" ;;
+        esac
+        base="${arg%.cpp}"
+        base="${base%.py}"
+
+        local cpp="$base.cpp"
+        local py="$base.py"
+
+        if [ "$prefer" = "cpp" ]; then
+            [ -f "$cpp" ] || { echo "error: $cpp not found." >&2; return 1; }
+            echo "$cpp"
+            return 0
+        fi
+        if [ "$prefer" = "py" ]; then
+            [ -f "$py" ] || { echo "error: $py not found." >&2; return 1; }
+            echo "$py"
+            return 0
+        fi
+
+        if [ -f "$cpp" ] && [ ! -f "$py" ]; then
+            echo "$cpp"
+            return 0
+        fi
+        if [ -f "$py" ] && [ ! -f "$cpp" ]; then
+            echo "$py"
+            return 0
+        fi
+        if [ -f "$cpp" ] && [ -f "$py" ]; then
+            echo "error: both $cpp and $py exist. specify extension." >&2
+            return 1
+        fi
+
+        echo "error: $cpp or $py not found." >&2
+        return 1
+    fi
+
+    local dir_name
+    dir_name="$(basename "$PWD")"
+    local dir_cpp="$dir_name.cpp"
+    local dir_py="$dir_name.py"
+    if [ -f "$dir_cpp" ] && [ ! -f "$dir_py" ]; then
+        echo "$dir_cpp"
+        return 0
+    fi
+    if [ -f "$dir_py" ] && [ ! -f "$dir_cpp" ]; then
+        echo "$dir_py"
+        return 0
+    fi
+    if [ -f "$dir_cpp" ] && [ -f "$dir_py" ]; then
+        echo "error: both $dir_cpp and $dir_py exist. specify file." >&2
+        return 1
+    fi
+
+    shopt -s nullglob
+    local cpp_files=( *.cpp )
+    local py_files=( *.py )
+    local total=$(( ${#cpp_files[@]} + ${#py_files[@]} ))
+    if [ "$total" -eq 1 ]; then
+        if [ "${#cpp_files[@]}" -eq 1 ]; then
+            echo "${cpp_files[0]}"
+        else
+            echo "${py_files[0]}"
+        fi
+        return 0
+    fi
+    if [ "$total" -eq 0 ]; then
+        echo "error: no target .cpp/.py found." >&2
+    else
+        echo "error: multiple .cpp/.py files found. specify file." >&2
+    fi
+    return 1
+}
