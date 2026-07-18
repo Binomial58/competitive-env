@@ -130,3 +130,15 @@ mkprob() {
     cd "$prob" || return $?
   fi
 }
+
+# competitive-env: mkcontest auto-cd（コンテストの親フォルダへ）
+mkcontest() {
+  local prefix=""
+  if [ "$#" -ge 2 ]; then
+    prefix="$2"
+  fi
+  command mkcontest "$@" || return $?
+  if [ -n "$prefix" ] && [ -d "$prefix" ]; then
+    cd "$prefix" || return $?
+  fi
+}

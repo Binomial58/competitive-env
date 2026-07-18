@@ -42,6 +42,14 @@ fi
 
 . "$SCRIPT_DIR/mkprob_core.sh"
 
+# コンテスト単位の親フォルダにまとめる。既にあれば再利用(追加生成)する。
+if [ -e "$PREFIX" ] && [ ! -d "$PREFIX" ]; then
+    echo "error: $PREFIX exists and is not a directory." >&2
+    exit 1
+fi
+mkdir -p "$PREFIX"
+cd "$PREFIX"
+
 CREATED=()
 SKIPPED=()
 for suffix in "${SUFFIXES[@]}"; do
@@ -53,7 +61,7 @@ for suffix in "${SUFFIXES[@]}"; do
     fi
 done
 
-echo "=== ${#CREATED[@]} 件作成, ${#SKIPPED[@]} 件スキップ ==="
+echo "=== $PREFIX/ 配下に ${#CREATED[@]} 件作成, ${#SKIPPED[@]} 件スキップ ==="
 if [ "${#SKIPPED[@]}" -gt 0 ]; then
     echo "skipped: ${SKIPPED[*]}" >&2
     exit 1

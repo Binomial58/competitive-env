@@ -30,10 +30,18 @@
 
 - `mkprob <lang> <problem>` 実行後、生成した `<problem>` ディレクトリへ自動で `cd`
 - 実体コマンドは `command mkprob "$@"` で呼び出し
-- `mkcontest`（コンテスト一括生成）は複数ディレクトリを同時に作るため、
-  同様の auto-cd ラッパーは無し。`.zshrc` 側の変更は不要
+
+### `mkcontest` function
+
+- `mkcontest <lang> <contest_prefix> ...` 実行後、生成したコンテスト親フォルダ
+  （`<contest_prefix>/`）へ自動で `cd`（`mkprob` と同じ仕組み）
+- 実体コマンドは `command mkcontest "$@"` で呼び出し
 
 ## Notes
 
 - `.zshrc` の大半は Oh My Zsh のデフォルトコメント
-- 実運用上重要なのは `PATH`・`command_not_found_handler`・`mkprob` 関数
+- 実運用上重要なのは `PATH`・`command_not_found_handler`・`mkprob`/`mkcontest` 関数
+- このリポジトリの `.zshrc` は `~/.zshrc` の手動同期コピー（symlink ではない）。
+  pnpm インストーラなど外部ツールが `~/.zshrc` に直接追記することがあるため、
+  両者は完全には一致しない場合がある。競技プログラミング関連の関数を
+  変更したときは、リポジトリ側だけでなく `~/.zshrc` 側にも反映が必要。

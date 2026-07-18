@@ -271,33 +271,40 @@ abc365_b/
 
 ## 仕様
 
-- フォルダ名：`<contest_prefix>_<suffix>`（`mkprob` と同じ命名規則の兄弟フォルダ）
+- `<contest_prefix>` という親フォルダを作り（無ければ新規作成、あれば再利用）、
+  その中に `<contest_prefix>_<suffix>` という子フォルダを作る
+  （子フォルダの命名規則は `mkprob` と同じ）
 - 個数指定 or サフィックス直接指定のどちらかを選べる
   - 個数指定（1〜26の整数1つ）: `a` から順に `<count>` 問ぶん生成
   - サフィックス直接指定（2つ以上、または数字以外を含む）: 指定した順にそのまま生成
-- 既に存在するフォルダはスキップし、他のフォルダの生成は継続する
+- 既に存在する子フォルダはスキップし、他のフォルダの生成は継続する
   - 1件でもスキップがあれば最後に一覧を表示し、終了コード 1 を返す
+- 実行後、生成した `<contest_prefix>/` フォルダへ自動で `cd` する
+  （`mkprob` の auto-cd と同じ仕組み。`.zshrc` の `mkcontest` 関数経由）
+- 親フォルダが既にある状態で再実行すれば、後から問題を追加生成できる
+  （例: コンテスト後に `ex` 問題だけ追加）
 
 ---
 
 ## 使い方
 
 ```bash
-mkcontest cpp abc468 7        # abc468_a 〜 abc468_g を作成
-mkcontest cpp abc468 a b c ex # abc468_a / abc468_b / abc468_c / abc468_ex を作成
-mkcontest py arc199 6         # arc199_a 〜 arc199_f を作成
+mkcontest cpp abc468 7        # abc468/ に abc468_a 〜 abc468_g を作成し cd
+mkcontest cpp abc468 a b c ex # abc468/ に abc468_a / abc468_b / abc468_c / abc468_ex を作成
+mkcontest py arc199 6         # arc199/ に arc199_a 〜 arc199_f を作成し cd
 ```
 
 生成される構成（`mkcontest cpp abc468 7` の場合）：
 ```text
-abc468_a/
-├── abc468_a.cpp
-├── in.txt
-└── out.txt
-abc468_b/
-├── abc468_b.cpp
-├── in.txt
-└── out.txt
+abc468/
+├── abc468_a/
+│   ├── abc468_a.cpp
+│   ├── in.txt
+│   └── out.txt
+├── abc468_b/
+│   ├── abc468_b.cpp
+│   ├── in.txt
+│   └── out.txt
 ...(abc468_g まで同様)
 ```
 
