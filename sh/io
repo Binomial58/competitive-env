@@ -66,8 +66,8 @@ run_executable() {
 }
 
 cleanup_generated_binaries() {
-    [ "$DEBUG_EXE" = "./a.debug.out" ] && rm -f "$DEBUG_EXE"
-    [ "$TRACE_EXE" = "./a.trace.out" ] && rm -f "$TRACE_EXE"
+    [ "$DEBUG_EXE" = "./a.debug.out" ] && [ "$RUN_EXE" != "$DEBUG_EXE" ] && rm -f "$DEBUG_EXE"
+    [ "$TRACE_EXE" = "./a.trace.out" ] && [ "$RUN_EXE" != "$TRACE_EXE" ] && rm -f "$TRACE_EXE"
 }
 
 retry_debug() {
