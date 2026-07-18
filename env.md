@@ -14,6 +14,9 @@
 
 - `export PATH="$HOME/Github/competitive-env/sh:$PATH"`
 - これにより `competitive-env/sh` 配下のコマンドが直接実行可能
+- ただし `resolve_target.sh` / `io_compare.sh` / `cpp_re_report.sh` は
+  他スクリプトから `source` される内部専用ライブラリで、直接コマンドとして
+  呼び出すものではない
 
 ## Custom Behaviors
 
