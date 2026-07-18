@@ -10,17 +10,23 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 ```text
 ~/competitive-env/
 └── sh/
-    ├── build.sh    （bd）
-    ├── io.sh       （io / io term）
-    ├── ioall       （C++ 全サンプル実行）
-    ├── py          （Python 単体/番号実行）
-    ├── pyall.sh    （Python 全サンプル実行）
-    ├── pyrun       （Python 単体実行）
-    ├── run         （自動判別で単体実行）
-    ├── runi        （自動判別で対話実行）
-    ├── runall      （自動判別で全サンプル実行）
-    └── mkprob.sh   （問題テンプレ生成）
+    ├── build.sh          （bd）
+    ├── io.sh             （io / io term）
+    ├── ioall             （C++ 全サンプル実行）
+    ├── py                （Python 単体/番号実行）
+    ├── pyall.sh          （Python 全サンプル実行）
+    ├── pyrun             （Python 単体実行）
+    ├── run               （自動判別で単体実行）
+    ├── runi              （自動判別で対話実行）
+    ├── runall            （自動判別で全サンプル実行）
+    ├── mkprob.sh         （問題テンプレ生成）
+    ├── resolve_target.sh （内部共有: run/runall/runi の対象ファイル自動判定）
+    ├── io_compare.sh     （内部共有: ioall/pyall.sh の出力比較・サンプル解決）
+    └── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
 ```
+
+`resolve_target.sh` / `io_compare.sh` / `cpp_re_report.sh` はコマンドとして直接実行するものではなく、
+上記スクリプトから `source` される共通関数ライブラリ。
 
 `.zshrc` で PATH を通して使う想定。
 
@@ -126,6 +132,7 @@ run --debug 0
 - NG の diff を `failures/` に保存
 - `--clean` で `failures/` を削除
 - 全サンプル OK のときは `failures/` を自動削除
+- `--sample N` でサンプル1件だけ実行（オプションと対象名はどちらを先に書いても良い）
 
 例:
 ```bash
@@ -134,6 +141,8 @@ pyall a
 pyall abc439_a
 pyall --clean
 pyall --clean abc439_a
+pyall --sample 5 a
+pyall a --sample 5
 ```
 
 ---
