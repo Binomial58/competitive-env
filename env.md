@@ -33,9 +33,12 @@
 
 ### `mkcontest` function
 
-- `mkcontest <lang> <contest_prefix> ...` 実行後、生成したコンテスト親フォルダ
-  （`<contest_prefix>/`）へ自動で `cd`（`mkprob` と同じ仕組み）
-- 実体コマンドは `command mkcontest "$@"` で呼び出し
+- `mkcontest <lang> <contest_prefix> ...` 実行後、**先頭の問題ディレクトリ**
+  （個数指定なら `..._a`、サフィックス直接指定なら先頭のサフィックス）へ自動で `cd`
+- 実体コマンド (`command mkcontest "$@"`) が `mktemp` で作った一時ファイルに
+  cd 先の絶対パスを書き出し、それを読んで `cd` する
+  （複数ディレクトリを作るため `mkprob` のように引数からそのまま cd 先を
+  決められず、実体コマンド側から一時ファイル経由で伝えている）
 
 ## Notes
 

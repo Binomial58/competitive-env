@@ -61,6 +61,12 @@ for suffix in "${SUFFIXES[@]}"; do
     fi
 done
 
+# 最初の問題(通常は a)のディレクトリを、呼び出し元シェルの auto-cd 先として
+# 一時ファイル経由で伝える(すでに存在してスキップされた場合でも cd 対象にはなる)。
+if [ -n "${MKCONTEST_CD_FILE:-}" ]; then
+    echo "$PWD/${PREFIX}_${SUFFIXES[0]}" > "$MKCONTEST_CD_FILE"
+fi
+
 echo "=== $PREFIX/ 配下に ${#CREATED[@]} 件作成, ${#SKIPPED[@]} 件スキップ ==="
 if [ "${#SKIPPED[@]}" -gt 0 ]; then
     echo "skipped: ${SKIPPED[*]}" >&2
