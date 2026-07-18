@@ -121,26 +121,7 @@ cleanup_case_artifacts() {
     fi
 }
 
-normalize_output() {
-    local file="$1"
-
-    LC_ALL=C perl -0777 -pe '
-        s/[\t\r ]+(?=\n|\z)//g;
-        s/\n*\z//;
-        $_ .= "\n" if length;
-    ' "$file"
-}
-
-outputs_match() {
-    local expected="$1"
-    local actual="$2"
-
-    if cmp -s "$expected" "$actual"; then
-        return 0
-    fi
-
-    cmp -s <(normalize_output "$expected") <(normalize_output "$actual")
-}
+. "$SCRIPT_DIR/io_compare.sh"
 
 build_debug_binary() {
     if $DEBUG_READY; then
@@ -317,31 +298,6 @@ run_case() {
     fi
 
     rm -f "$tmpfile" "$errfile"
-}
-
-resolve_sample_input() {
-    local idx="$1"
-    if [ ! -d "$SAMPLE_DIR" ]; then
-        return 1
-    fi
-
-    if [ -f "$SAMPLE_DIR/sample-${idx}.in" ]; then
-        echo "$SAMPLE_DIR/sample-${idx}.in"
-        return 0
-    fi
-
-    local infile base suffix
-    for infile in "$SAMPLE_DIR"/*.in; do
-        base="$(basename "${infile%.in}")"
-        if [[ "$base" =~ -([0-9]+)$ ]]; then
-            suffix="${BASH_REMATCH[1]}"
-            if [ $((10#$suffix)) -eq $((10#$idx)) ]; then
-                echo "$infile"
-                return 0
-            fi
-        fi
-    done
-    return 1
 }
 
 if [ -n "$SAMPLE_ONLY" ]; then
