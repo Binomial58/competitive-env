@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # options
 CLEAN=false
 SAMPLE_ONLY=""
@@ -18,6 +20,7 @@ while [ $# -gt 0 ]; do
             ;;
         --sample|--only|-s)
             shift
+            [ $# -gt 0 ] || { echo "error: --sample requires a number." >&2; exit 1; }
             SAMPLE_ONLY="$1"
             shift
             ;;
@@ -26,15 +29,20 @@ while [ $# -gt 0 ]; do
             break
             ;;
         *)
-            NAME="$1"
-            shift
-            break
+            if [ -z "$NAME" ]; then
+                NAME="$1"
+                shift
+            else
+                echo "error: unexpected argument: $1" >&2
+                exit 1
+            fi
             ;;
     esac
 done
 
 if [ -z "$NAME" ] && [ $# -gt 0 ]; then
     NAME="$1"
+    shift
 fi
 
 if [ -n "$SAMPLE_ONLY" ] && ! [[ "$SAMPLE_ONLY" =~ ^[0-9]{1,3}$ ]]; then
@@ -82,30 +90,11 @@ if [ ! -f "$PY_FILE" ]; then
     exit 1
 fi
 
+. "$SCRIPT_DIR/io_compare.sh"
+
 shopt -s nullglob
 OK_ALL=true
 SINGLE=false
-
-normalize_output() {
-    local file="$1"
-
-    LC_ALL=C perl -0777 -pe '
-        s/[\t\r ]+(?=\n|\z)//g;
-        s/\n*\z//;
-        $_ .= "\n" if length;
-    ' "$file"
-}
-
-outputs_match() {
-    local expected="$1"
-    local actual="$2"
-
-    if cmp -s "$expected" "$actual"; then
-        return 0
-    fi
-
-    cmp -s <(normalize_output "$expected") <(normalize_output "$actual")
-}
 
 run_case() {
     local infile="$1"
@@ -146,31 +135,6 @@ run_case() {
     fi
 
     rm -f "$tmpfile"
-}
-
-resolve_sample_input() {
-    local idx="$1"
-    if [ ! -d "$SAMPLE_DIR" ]; then
-        return 1
-    fi
-
-    if [ -f "$SAMPLE_DIR/sample-${idx}.in" ]; then
-        echo "$SAMPLE_DIR/sample-${idx}.in"
-        return 0
-    fi
-
-    local infile base suffix
-    for infile in "$SAMPLE_DIR"/*.in; do
-        base="$(basename "${infile%.in}")"
-        if [[ "$base" =~ -([0-9]+)$ ]]; then
-            suffix="${BASH_REMATCH[1]}"
-            if [ $((10#$suffix)) -eq $((10#$idx)) ]; then
-                echo "$infile"
-                return 0
-            fi
-        fi
-    done
-    return 1
 }
 
 if [ -n "$SAMPLE_ONLY" ]; then
