@@ -39,9 +39,13 @@ fetchsample [problem_name]
 
 1. `/mnt/c/Users/$USER/Downloads` が存在すればそれを使う
    - `$USER` はWSL側のユーザー名。Windows側のユーザー名と一致していれば、これだけで解決する
-2. 存在しない場合、`cmd.exe /c "echo %USERNAME%"` を呼んでWindows側のユーザー名を取得し、
-   `/mnt/c/Users/<Windowsユーザー名>/Downloads` を試す
-   （WSLのユーザー名とWindowsのユーザー名が異なる環境向けのフォールバック）
+2. 存在しない場合、`cmd.exe /c "echo %USERPROFILE%"` を呼んでWindows側のプロファイルパス
+   （例: `C:\Users\sora2`）を取得し、`wslpath -u` でWSLパスに変換した上で
+   `<変換後のパス>/Downloads` を試す
+   （WSLのユーザー名とWindowsのユーザー名が異なる環境向けのフォールバック。
+   `%USERNAME%`（表示名）ではなく `%USERPROFILE%`（実際のフォルダパス）を使うのは、
+   Windowsアカウントを後から改名した場合に表示名とプロファイルフォルダ名がズレる
+   ことがあるため）
 3. どちらも見つからなければ `error: could not locate Windows Downloads folder.` を出して終了
 
 ### 2-3. zipファイルの特定と取り込み
@@ -153,7 +157,7 @@ sample-1.out
 - `bash`（`set -euo pipefail` 前提のスクリプト）
 - `unzip` コマンド
 - WSL上で `/mnt/c/...` によるWindowsファイルシステムへのアクセスが有効なこと
-- （Downloadsパス解決のフォールバックで）`cmd.exe` がWSLから呼び出せること
+- （Downloadsパス解決のフォールバックで）`cmd.exe` / `wslpath` がWSLから呼び出せること（WSLに標準で同梱）
 - （重複排除で）`sha256sum` / `shasum` / `cksum` のいずれか（Ubuntuなら`sha256sum`が標準で入っている）
 
 ---
