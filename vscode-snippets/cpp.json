@@ -1,0 +1,159 @@
+{
+	"rep0": {
+		"prefix": "rep0",
+		"body": [
+			"rep0(${1:i}, ${2:n})",
+			"{",
+			"    $0",
+			"}"
+		],
+		"description": "rep0(i, n)"
+	},
+	"rep": {
+		"prefix": "rep",
+		"body": [
+			"rep(${1:i}, ${2:a}, ${3:b})",
+			"{",
+			"    $0",
+			"}"
+		],
+		"description": "rep(i, a, b)"
+	},
+	"rrep": {
+		"prefix": "rrep",
+		"body": [
+			"rrep(${1:i}, ${2:a}, ${3:b})",
+			"{",
+			"    $0",
+			"}"
+		],
+		"description": "rrep(i, a, b)"
+	},
+	"DY/DX (4-direction)": {
+		"prefix": "dxdy4",
+		"body": [
+			"vector<ll> DY = {0, -1, 0, 1}, DX = {1, 0, -1, 0};"
+		],
+		"description": "上下左右4方向の移動ベクトル"
+	},
+	"DY/DX (8-direction)": {
+		"prefix": "dxdy8",
+		"body": [
+			"vector<ll> DY = {0, -1, -1, -1, 0, 1, 1, 1}, DX = {1, 1, 0, -1, -1, -1, 0, 1};"
+		],
+		"description": "斜め込み8方向の移動ベクトル"
+	},
+	"Grid bounds check": {
+		"prefix": "inrange",
+		"body": [
+			"0 <= ${1:ny} && ${1:ny} < ${2:h} && 0 <= ${3:nx} && ${3:nx} < ${4:w}"
+		],
+		"description": "グリッド範囲内チェックの条件式"
+	},
+	"VEC input macro": {
+		"prefix": "vec",
+		"body": [
+			"VEC(${1:ll}, ${2:A}, ${3:n});"
+		],
+		"description": "VEC(type, name, size) 入力マクロ"
+	},
+	"LL input macro": {
+		"prefix": "ll",
+		"body": [
+			"LL(${1:n});"
+		],
+		"description": "LL(...) ll型の変数入力マクロ"
+	},
+	"STR input macro": {
+		"prefix": "str",
+		"body": [
+			"STR(${1:s});"
+		],
+		"description": "STR(...) string型の変数入力マクロ"
+	},
+	"VV input macro": {
+		"prefix": "vv",
+		"body": [
+			"VV(${1:ll}, ${2:A}, ${3:h}, ${4:w});"
+		],
+		"description": "VV(type, name, h, w) 2次元配列入力マクロ"
+	},
+	"DBL input macro": {
+		"prefix": "dbl",
+		"body": [
+			"DBL(${1:x});"
+		],
+		"description": "DBL(...) double型の変数入力マクロ"
+	},
+	"VEC0 declare macro": {
+		"prefix": "vec0",
+		"body": [
+			"VEC0(${1:ll}, ${2:A}, ${3:n});"
+		],
+		"description": "VEC0(type, name, size) 0初期化の1次元配列宣言マクロ"
+	},
+	"VECI declare macro": {
+		"prefix": "veci",
+		"body": [
+			"VECI(${1:ll}, ${2:A}, ${3:n}, ${4:init});"
+		],
+		"description": "VECI(type, name, size, init) 初期値付き1次元配列宣言マクロ"
+	},
+	"VV0 declare macro": {
+		"prefix": "vv0",
+		"body": [
+			"VV0(${1:ll}, ${2:A}, ${3:h}, ${4:w});"
+		],
+		"description": "VV0(type, name, h, w) 0初期化の2次元配列宣言マクロ"
+	},
+	"VVI declare macro": {
+		"prefix": "vvi",
+		"body": [
+			"VVI(${1:ll}, ${2:A}, ${3:h}, ${4:w}, ${5:init});"
+		],
+		"description": "VVI(type, name, h, w, init) 初期値付き2次元配列宣言マクロ"
+	},
+	"sort ascending": {
+		"prefix": "sort",
+		"body": [
+			"sort(${1:A}.begin(), ${1:A}.end());"
+		],
+		"description": "昇順ソート"
+	},
+	"sort descending": {
+		"prefix": "rsort",
+		"body": [
+			"sort(${1:A}.rbegin(), ${1:A}.rend());"
+		],
+		"description": "降順ソート"
+	},
+	"sort with comparator": {
+		"prefix": "sortcmp",
+		"body": [
+			"sort(${1:A}.begin(), ${1:A}.end(), [](const auto &${2:a}, const auto &${3:b})",
+			"     { return $0; });"
+		],
+		"description": "比較関数付きソート"
+	},
+	"priority_queue (max-heap)": {
+		"prefix": "pq",
+		"body": [
+			"priority_queue<${1:ll}> ${2:Q};"
+		],
+		"description": "priority_queue<T> 最大ヒープ"
+	},
+	"priority_queue (min-heap)": {
+		"prefix": "pqmin",
+		"body": [
+			"priority_queue<${1:ll}, vector<${1:ll}>, greater<${1:ll}>> ${2:Q};"
+		],
+		"description": "priority_queue<T, vector<T>, greater<T>> 最小ヒープ"
+	},
+	"priority_queue (min-heap of pairs)": {
+		"prefix": "pqp",
+		"body": [
+			"priority_queue<pair<${1:ll}, ${1:ll}>, vector<pair<${1:ll}, ${1:ll}>>, greater<pair<${1:ll}, ${1:ll}>>> ${2:Q};"
+		],
+		"description": "priority_queue<pair<T,T>, ...> 最小ヒープ（ダイクストラ等）"
+	}
+}
