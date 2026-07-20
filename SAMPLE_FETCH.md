@@ -9,18 +9,17 @@
 
 ```
 [Windows: ブラウザ拡張]                [WSL: fetchsample]              [WSL: unzips]
-atcoder-sample-downloader          ①zipを探して問題フォルダへmv     ②zipを展開してsamples/へ
-問題ページで「Sample DL」          （名前が一致しなければ           ③重複サンプルを削除
-  ↓                                  最新zipを候補として確認）        ④sample-0をin.txt/out.txtへコピー
-<問題名>.zip が                                                       ⑤zipを削除（デフォルト）
+atcoder-sample-downloader          ①最新zipを問題フォルダへmv       ②zipを展開してsamples/へ
+問題ページで「Sample DL」            （問題名との一致は問わない）      ③重複サンプルを削除
+  ↓                                                                   ④sample-0をin.txt/out.txtへコピー
+zipが                                                                 ⑤zipを削除（デフォルト）
 Windows側 Downloads に保存
 ```
 
 - ブラウザ(Chrome/Edge)はWindows側で動くため、拡張機能が保存するzipもWindows側の `Downloads` フォルダに置かれる
-- `fetchsample` はそのzipをWSL側から `/mnt/c/...` 経由で見つけ出し、カレントディレクトリ（問題フォルダ）に取り込む
+- `fetchsample` はDownloads内で**最終更新日時が最も新しいzip**をWSL側から `/mnt/c/...` 経由で見つけ出し、カレントディレクトリ（問題フォルダ）に取り込む
+- zipファイル名と問題名が一致しているかどうかは見ない（Sample DLしてすぐ`fetchsample`を叩く運用なら、直前にダウンロードしたzipが常に対象になる）
 - 実際の展開・整形処理は `unzips` に委譲される（`fetchsample` は最後に `exec unzips "./$NAME.zip"` を呼ぶだけ）
-
-前提として、問題フォルダ名とzipファイル名（`<問題名>.zip`）が一致している必要があります（`mkprob` で作ったフォルダ名がそのまま該当します）。
 
 ---
 
@@ -50,26 +49,18 @@ fetchsample [problem_name]
 
 ### 2-3. zipファイルの特定と取り込み
 
-1. `<Downloads>/<problem_name>.zip` が存在する場合
-   - そのままカレントディレクトリへ `mv`（`[MV] <元パス> -> ./<問題名>.zip`）
-2. 完全一致するzipが無い場合
-   - Downloads内の `*.zip` を列挙
-   - 1件も無ければ `error: ... not found ..., and no other zip files there either.` で終了
-   - 1件以上あれば、**更新日時が最も新しいzip**を「候補」として提示
-     ```
-     warning: <name>.zip not found.
-     closest guess: <最新のzip名> (most recently downloaded zip in <Downloads>)
-     use this file instead? [y/N]
-     ```
-   - `y`/`Y`/`yes`/`YES` 以外の入力（Enterのみ含む）は中断（`aborted.`）
-   - 承諾した場合、その候補を `./<problem_name>.zip` という名前で `mv`
-     （元のファイル名がなんであれ、問題名にリネームされる点に注意）
-3. 取り込んだ `./<problem_name>.zip` を引数に `unzips` を呼び出して終了（`exec` のためプロセスが置き換わる＝以降は`unzips`の仕様がそのまま適用される）
+1. Downloads内の `*.zip` `*.ZIP` を列挙する
+   - 1件も無ければ `error: no zip files found in <Downloads>.` で終了
+2. その中で**更新日時が最も新しいzip**を無条件に選ぶ（問題名との一致・確認プロンプトは無い）
+3. `./<problem_name>.zip` という名前でカレントディレクトリへ `mv`
+   （`[MV] <元パス> -> ./<問題名>.zip`。元のファイル名がなんであれ、問題名にリネームされる点に注意）
+4. 取り込んだ `./<problem_name>.zip` を引数に `unzips` を呼び出して終了（`exec` のためプロセスが置き換わる＝以降は`unzips`の仕様がそのまま適用される）
 
 ### 2-4. 注意点
 
 - 常に「問題フォルダの中で」実行する想定（複数問題フォルダをまたいだ一括処理はできない。一括処理は次章の`unzips`単体呼び出しで対応）
-- Downloads内に該当zipが複数該当する状況は考慮していない（完全一致は常に1件のみ想定）
+- **常に無条件で最新のzipを使う**ため、Sample DL後すぐに`fetchsample`を叩かないと、
+  別の問題のzipや古いzipを誤って取り込む可能性がある（確認プロンプトは無い）
 
 ---
 
@@ -167,9 +158,7 @@ sample-1.out
 | メッセージ | 発生元 | 意味・対処 |
 |---|---|---|
 | `could not locate Windows Downloads folder.` | fetchsample | `/mnt/c/Users/<user>/Downloads` が見つからない。WSLのマウント設定を確認 |
-| `<name>.zip not found in ..., and no other zip files there either.` | fetchsample | Downloadsが空。ブラウザ拡張でのDLができているか確認 |
-| `<name>.zip not found.` + `closest guess: ...` | fetchsample | 名前不一致。y/Nで確認後、最新zipを問題名にリネームして使う |
-| `aborted.` | fetchsample | 上記確認で`y`以外を入力した場合 |
+| `no zip files found in <Downloads>.` | fetchsample | Downloadsが空。ブラウザ拡張でのDLができているか確認 |
 | `unzip command not found.` | unzips | `sudo apt install unzip` 等が必要 |
 | `no zip files found.` | unzips | カレント/1階層下にzipが無い |
 | `skip (not found): <path>` | unzips | 引数で明示したzipが存在しない |
@@ -184,7 +173,7 @@ sample-1.out
 
 ```bash
 cd ~/atcoder/abc999/abc999_a
-fetchsample                 # Downloadsの abc999_a.zip を取り込み、展開まで自動実行
+fetchsample                 # Downloadsの最新zip(名前は問わない)を取り込み、展開まで自動実行
 ```
 
 zipを既に問題フォルダに手動で置いてある場合:

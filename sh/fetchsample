@@ -4,8 +4,9 @@ set -euo pipefail
 usage() {
     echo "usage: fetchsample [problem_name]" >&2
     echo "  no args: use current directory name as problem name" >&2
-    echo "  locates <problem_name>.zip in the Windows Downloads folder," >&2
-    echo "  moves it into the current directory, then hands off to unzips" >&2
+    echo "  takes the most recently downloaded zip in the Windows Downloads folder" >&2
+    echo "  (regardless of its name), moves it into the current directory as" >&2
+    echo "  <problem_name>.zip, then hands off to unzips" >&2
     exit 1
 }
 
@@ -48,47 +49,26 @@ DOWNLOADS_DIR="$(resolve_downloads_dir)" || {
     exit 1
 }
 
-ZIP_SRC="$DOWNLOADS_DIR/$PROBLEM_NAME.zip"
+shopt -s nullglob
+candidates=( "$DOWNLOADS_DIR"/*.zip "$DOWNLOADS_DIR"/*.ZIP )
+shopt -u nullglob
 
-if [ -f "$ZIP_SRC" ]; then
-    mv "$ZIP_SRC" "./$PROBLEM_NAME.zip"
-    echo "[MV] $ZIP_SRC -> ./$PROBLEM_NAME.zip"
-else
-    shopt -s nullglob
-    candidates=( "$DOWNLOADS_DIR"/*.zip "$DOWNLOADS_DIR"/*.ZIP )
-    shopt -u nullglob
-
-    if [ "${#candidates[@]}" -eq 0 ]; then
-        echo "error: $PROBLEM_NAME.zip not found in $DOWNLOADS_DIR, and no other zip files there either." >&2
-        exit 1
-    fi
-
-    latest=""
-    latest_mtime=-1
-    for f in "${candidates[@]}"; do
-        mtime="$(stat -c %Y "$f" 2>/dev/null || echo -1)"
-        if [ "$mtime" -gt "$latest_mtime" ]; then
-            latest_mtime="$mtime"
-            latest="$f"
-        fi
-    done
-
-    echo "warning: $PROBLEM_NAME.zip not found." >&2
-    echo "closest guess: $(basename "$latest") (most recently downloaded zip in $DOWNLOADS_DIR)" >&2
-    printf "use this file instead? [y/N] " >&2
-    read -r answer
-
-    case "$answer" in
-        y|Y|yes|YES)
-            ;;
-        *)
-            echo "aborted." >&2
-            exit 1
-            ;;
-    esac
-
-    mv "$latest" "./$PROBLEM_NAME.zip"
-    echo "[MV] $latest -> ./$PROBLEM_NAME.zip"
+if [ "${#candidates[@]}" -eq 0 ]; then
+    echo "error: no zip files found in $DOWNLOADS_DIR." >&2
+    exit 1
 fi
+
+latest=""
+latest_mtime=-1
+for f in "${candidates[@]}"; do
+    mtime="$(stat -c %Y "$f" 2>/dev/null || echo -1)"
+    if [ "$mtime" -gt "$latest_mtime" ]; then
+        latest_mtime="$mtime"
+        latest="$f"
+    fi
+done
+
+mv "$latest" "./$PROBLEM_NAME.zip"
+echo "[MV] $latest -> ./$PROBLEM_NAME.zip"
 
 exec "$SCRIPT_DIR/unzips" "./$PROBLEM_NAME.zip"

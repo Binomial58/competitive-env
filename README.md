@@ -252,9 +252,11 @@ cleanfail
 ## fetchsample / unzips：サンプル取得
 
 概要:
-- ブラウザ拡張（atcoder-sample-downloader）が Windows 側の Downloads に保存した
-  `<問題名>.zip` を WSL 側の問題フォルダへ取り込み、`samples/` に展開する
-- `fetchsample` が Downloads からの取り込みを担当し、最後に `unzips` へ処理を委譲する
+- ブラウザ拡張（atcoder-sample-downloader）が Windows 側の Downloads に保存した zip を
+  WSL 側の問題フォルダへ取り込み、`samples/` に展開する
+- `fetchsample` は Downloads 内の**最新の zip を問題名に関わらず無条件に**取り込む
+  （確認プロンプトは無いので、Sample DL 後は間を置かず `fetchsample` を叩く運用が前提）
+  最後に `unzips` へ処理を委譲する
 - `unzips` は単体でも使え、手動で置いた zip や `abc999/` のようなコンテストルートでの一括展開にも対応する
 - 展開後、`sample-0` を `in.txt` / `out.txt` に自動コピーする（`run` の既定入出力になる）
 - 詳細な仕様（Downloads解決の優先順位、重複排除ロジック、エラーメッセージ一覧など）は [SAMPLE_FETCH.md](SAMPLE_FETCH.md) を参照
