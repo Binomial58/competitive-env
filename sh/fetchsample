@@ -1,0 +1,91 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    echo "usage: fetchsample [problem_name]" >&2
+    echo "  no args: use current directory name as problem name" >&2
+    echo "  locates <problem_name>.zip in the Windows Downloads folder," >&2
+    echo "  moves it into the current directory, then hands off to unzips" >&2
+    exit 1
+}
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        ;;
+esac
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROBLEM_NAME="${1:-$(basename "$PWD")}"
+
+resolve_downloads_dir() {
+    local dir="/mnt/c/Users/$USER/Downloads"
+    if [ -d "$dir" ]; then
+        echo "$dir"
+        return 0
+    fi
+
+    if command -v cmd.exe >/dev/null 2>&1; then
+        local win_user
+        win_user="$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r\n')"
+        if [ -n "$win_user" ]; then
+            dir="/mnt/c/Users/$win_user/Downloads"
+            if [ -d "$dir" ]; then
+                echo "$dir"
+                return 0
+            fi
+        fi
+    fi
+
+    return 1
+}
+
+DOWNLOADS_DIR="$(resolve_downloads_dir)" || {
+    echo "error: could not locate Windows Downloads folder." >&2
+    exit 1
+}
+
+ZIP_SRC="$DOWNLOADS_DIR/$PROBLEM_NAME.zip"
+
+if [ -f "$ZIP_SRC" ]; then
+    mv "$ZIP_SRC" "./$PROBLEM_NAME.zip"
+    echo "[MV] $ZIP_SRC -> ./$PROBLEM_NAME.zip"
+else
+    shopt -s nullglob
+    candidates=( "$DOWNLOADS_DIR"/*.zip "$DOWNLOADS_DIR"/*.ZIP )
+    shopt -u nullglob
+
+    if [ "${#candidates[@]}" -eq 0 ]; then
+        echo "error: $PROBLEM_NAME.zip not found in $DOWNLOADS_DIR, and no other zip files there either." >&2
+        exit 1
+    fi
+
+    latest=""
+    latest_mtime=-1
+    for f in "${candidates[@]}"; do
+        mtime="$(stat -c %Y "$f" 2>/dev/null || echo -1)"
+        if [ "$mtime" -gt "$latest_mtime" ]; then
+            latest_mtime="$mtime"
+            latest="$f"
+        fi
+    done
+
+    echo "warning: $PROBLEM_NAME.zip not found." >&2
+    echo "closest guess: $(basename "$latest") (most recently downloaded zip in $DOWNLOADS_DIR)" >&2
+    printf "use this file instead? [y/N] " >&2
+    read -r answer
+
+    case "$answer" in
+        y|Y|yes|YES)
+            ;;
+        *)
+            echo "aborted." >&2
+            exit 1
+            ;;
+    esac
+
+    mv "$latest" "./$PROBLEM_NAME.zip"
+    echo "[MV] $latest -> ./$PROBLEM_NAME.zip"
+fi
+
+exec "$SCRIPT_DIR/unzips" "./$PROBLEM_NAME.zip"

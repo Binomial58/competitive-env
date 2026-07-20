@@ -27,7 +27,9 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── resolve_target.sh （内部共有: run/runall/runi/stress の対象ファイル自動判定）
     ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・サンプル解決・TL 解決）
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
-    └── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
+    ├── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
+    ├── fetchsample       （Windows Downloads の zip を問題フォルダへ取り込み）
+    └── unzips            （サンプル zip を展開して samples/ へ整形）
 ```
 
 `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` はコマンドとして
@@ -243,6 +245,27 @@ py --tl 2000 --sample 5 a
 
 ```bash
 cleanfail
+```
+
+---
+
+## fetchsample / unzips：サンプル取得
+
+概要:
+- ブラウザ拡張（atcoder-sample-downloader）が Windows 側の Downloads に保存した
+  `<問題名>.zip` を WSL 側の問題フォルダへ取り込み、`samples/` に展開する
+- `fetchsample` が Downloads からの取り込みを担当し、最後に `unzips` へ処理を委譲する
+- `unzips` は単体でも使え、手動で置いた zip や `abc999/` のようなコンテストルートでの一括展開にも対応する
+- 展開後、`sample-0` を `in.txt` / `out.txt` に自動コピーする（`run` の既定入出力になる）
+- 詳細な仕様（Downloads解決の優先順位、重複排除ロジック、エラーメッセージ一覧など）は [SAMPLE_FETCH.md](SAMPLE_FETCH.md) を参照
+
+例:
+```bash
+fetchsample                 # カレントディレクトリ名を問題名として取り込み〜展開まで一括実行
+fetchsample abc999_a        # 問題名を明示指定
+
+unzips                      # カレントの *.zip を展開
+unzips --keep                # 展開後もzipを残す
 ```
 
 ---
