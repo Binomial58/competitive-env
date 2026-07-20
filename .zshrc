@@ -103,7 +103,7 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-export PATH="$HOME/Github/competitive-env/sh:$PATH"
+export PATH="$HOME/Github/personal/competitive-programming/competitive-env/sh:$PATH"
 
 # competitive-env: py0/run0 shorthand without wrapper files
 command_not_found_handler() {
