@@ -509,20 +509,22 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define DISCARD_ONE(c, x) discard_one((c), (x))
 #define DISCARD_ALL(c, x) discard_all((c), (x))
 
-long long isqrt(long long n)
+template <class T>
+T isqrt(T n)
 {
-    long long r = sqrtl((long double)n);
-    while (i128(r + 1) * (r + 1) <= n)
+    T r = (T)sqrtl((long double)n);
+    while (i128(r + 1) * (r + 1) <= (i128)n)
         r++;
-    while (i128(r) * r > n)
+    while (i128(r) * r > (i128)n)
         r--;
     return r;
 }
 
-bool is_square(long long n)
+template <class T>
+bool is_square(T n)
 {
-    long long r = isqrt(n);
-    return i128(r) * r == n;
+    T r = isqrt(n);
+    return i128(r) * r == (i128)n;
 }
 
 template <class T>
@@ -577,9 +579,10 @@ void sort_by_key(vector<Key, Alloc> &key, Vecs &...vs)
     apply_order(order, key, vs...);
 }
 
-long long ipow(long long a, long long e)
+template <class T>
+T ipow(T a, long long e)
 {
-    long long r = 1;
+    T r = 1;
     while (e > 0)
     {
         if (e & 1)
@@ -699,9 +702,9 @@ C reversed(C c)
 }
 
 template <class T>
-long long sum(const vector<T> &v)
+T sum(const vector<T> &v)
 {
-    return accumulate(v.begin(), v.end(), 0LL);
+    return accumulate(v.begin(), v.end(), T(0));
 }
 
 template <class T>

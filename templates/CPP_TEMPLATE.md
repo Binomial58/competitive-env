@@ -254,14 +254,17 @@ int cnt = DISCARD_ALL(ms, x); // multiset で全部
 ### 整数平方根 / 平方数判定
 
 ```cpp
-long long isqrt(long long n);
-bool is_square(long long n);
+template <class T> T isqrt(T n);
+template <class T> bool is_square(T n);
 ```
 
-- `isqrt(n)`: `floor(sqrt(n))` を整数として返す（`0 <= n <= LLONG_MAX`）
+- `isqrt(n)`: `floor(sqrt(n))` を `n` と同じ型で返す（`ll` / `i128` どちらでも呼べる。`0 <= n`）
 - `is_square(n)`: `n` が平方数なら `true`
 - 初期値には `sqrtl` を使い、浮動小数点誤差によるずれを `while` で補正する
-- `r * r` が `long long` を超え得るため、比較は `i128` に拡張して行う
+- `r * r` が `T` を超え得るため、比較は常に `i128` に拡張して行う
+- テンプレートなので `ll n` に対しては `isqrt(n)` が今まで通り `ll` で返り、
+  `i128 n` に対しても同じ呼び方で正しく `i128` の範囲で計算される
+  （`isqrt128` のような別関数を用意する必要はない）
 
 例:
 
@@ -347,11 +350,14 @@ apply_order(order, score, id);
 ### べき乗
 
 ```cpp
-long long ipow(long long a, long long e);
+template <class T> T ipow(T a, long long e);
 ```
 
 - 単純な繰り返し二乗法
-- オーバーフローは呼び出し側で注意
+- `a` の型 `T` は呼び出し時の引数から推論される（`ll a` なら `ll` で、
+  `i128 a` なら `i128` で計算される。`ipow128` のような別関数は不要）
+- オーバーフローは呼び出し側で注意（`T` の範囲内で計算されるだけで、
+  `i128` を渡しても無制限になるわけではない）
 
 ### `join` 系
 
@@ -421,10 +427,13 @@ C reversed(C c);
 
 ```cpp
 template <class T>
-long long sum(const vector<T> &v);
+T sum(const vector<T> &v);
 ```
 
-- `accumulate(..., 0LL)` で合計を返す
+- `accumulate(..., T(0))` で `v` の要素と同じ型 `T` の合計を返す
+  （`vector<ll>` なら `ll`、`vector<i128>` なら `i128` で計算される。
+  以前は内部で `0LL` 固定だったため `vector<i128>` を渡すと各要素が
+  `ll` に切り詰められて壊れていた）
 
 ### シーケンス結合（`vector` / `array`）
 
