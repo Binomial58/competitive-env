@@ -116,42 +116,55 @@ run_case() {
     elapsed=$((end - start))
 
     if $SINGLE; then
+        echo "${C_BOLD}--- input ---${C_RESET}"
         cat "$infile"
-        echo
+        echo "${C_BOLD}--- output ---${C_RESET}"
         cat "$tmpfile"
+        echo
     fi
 
     local tl tle_note=""
     tl="$(resolve_time_limit || true)"
     if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
-        tle_note=" [TLE > ${tl} ms]"
+        tle_note=" ${C_YELLOW}[TLE > ${tl} ms]${C_RESET}"
         HAD_TLE=true
     fi
 
     if [ -f "$outfile" ]; then
         if outputs_match "$outfile" "$tmpfile"; then
             if [ -n "$tle_note" ]; then
-                echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+                echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+                tally_add TLE
                 OK_ALL=false
             else
-                echo "[AC]   $label (${elapsed} ms)"
+                echo "$(colored_tag AC)   $label (${elapsed} ms)"
+                tally_add AC
             fi
         else
-            echo "[WA]   $label (${elapsed} ms)${tle_note}"
+            echo "$(colored_tag WA)   $label (${elapsed} ms)${tle_note}"
+            tally_add WA
             mkdir -p "$FAIL_DIR"
+            if $SINGLE; then
+                echo "${C_BOLD}--- expected ---${C_RESET}"
+                cat "$outfile"
+                echo
+            fi
             if $NO_DIFF; then
                 diff -u "$outfile" "$tmpfile" > "$difffile"
             else
+                echo "${C_BOLD}--- diff (expected vs actual) ---${C_RESET}"
                 diff -u "$outfile" "$tmpfile" | tee "$difffile"
             fi
             OK_ALL=false
         fi
     else
         if [ -n "$tle_note" ]; then
-            echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+            echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+            tally_add TLE
             OK_ALL=false
         else
-            echo "[RUN]  $label (${elapsed} ms)"
+            echo "$(colored_tag RUN)  $label (${elapsed} ms)"
+            tally_add RUN
         fi
         if ! $SINGLE; then
             cat "$tmpfile"
@@ -197,7 +210,7 @@ if $OK_ALL; then
     if $SINGLE; then
         :
     else
-        echo "=== 全サンプルAC ==="
+        echo "${C_GREEN}=== 全サンプルAC ===${C_RESET} $(tally_summary)"
         echo "=== コピーします ==="
         if command -v xclip >/dev/null 2>&1; then
             if xclip -selection clipboard < "$PY_FILE"; then
@@ -217,9 +230,9 @@ else
         :
     else
         if $HAD_TLE; then
-            echo "=== 一部TLE ==="
+            echo "${C_YELLOW}=== 一部TLE ===${C_RESET} $(tally_summary)"
         else
-            echo "=== 一部WA ==="
+            echo "${C_RED}=== 一部WA ===${C_RESET} $(tally_summary)"
         fi
     fi
 fi

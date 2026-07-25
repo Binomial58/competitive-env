@@ -144,7 +144,7 @@ for ((i = 0; i < COUNT; i++)); do
     if "${GEN_CMD[@]}" "$seed" > "$IN_FILE"; then
         :
     else
-        echo "[GEN-ERROR] seed=$seed: generator が異常終了しました。" >&2
+        echo "$(colored_tag GEN-ERROR) seed=$seed: generator が異常終了しました。" >&2
         cleanup_tmp
         exit 1
     fi
@@ -156,7 +156,7 @@ for ((i = 0; i < COUNT; i++)); do
         brute_status=$?
     fi
     if [ "$brute_status" -ne 0 ]; then
-        echo "[BRUTE-ERROR] seed=$seed: brute が異常終了しました(exit $brute_status)。" >&2
+        echo "$(colored_tag BRUTE-ERROR) seed=$seed: brute が異常終了しました(exit $brute_status)。" >&2
         if [ -s "$BRUTE_ERR" ]; then
             cat "$BRUTE_ERR" >&2
         fi
@@ -176,7 +176,7 @@ for ((i = 0; i < COUNT; i++)); do
     elapsed=$((end - start))
 
     if [ "$main_status" -ne 0 ]; then
-        echo "[RE]   seed=$seed (${elapsed} ms, exit $main_status)"
+        echo "$(colored_tag RE)   seed=$seed (${elapsed} ms, exit $main_status)"
         if [ -s "$MAIN_ERR" ]; then
             cat "$MAIN_ERR" >&2
         fi
@@ -187,16 +187,16 @@ for ((i = 0; i < COUNT; i++)); do
 
     tl="$(resolve_time_limit || true)"
     if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
-        echo "[TLE]  seed=$seed (${elapsed} ms > ${tl} ms)"
+        echo "$(colored_tag TLE)  seed=$seed (${elapsed} ms > ${tl} ms)"
         save_failure "main が制限時間を超過(${elapsed} ms > ${tl} ms)"
         cleanup_tmp
         exit 1
     fi
 
     if outputs_match "$BRUTE_OUT" "$MAIN_OUT"; then
-        echo "[OK]   seed=$seed (${elapsed} ms)"
+        echo "$(colored_tag OK)   seed=$seed (${elapsed} ms)"
     else
-        echo "[MISMATCH] seed=$seed (${elapsed} ms)"
+        echo "$(colored_tag MISMATCH) seed=$seed (${elapsed} ms)"
         save_failure "main と brute の出力が不一致"
         echo "  diff:"
         diff -u "$BRUTE_OUT" "$MAIN_OUT" | sed 's/^/  /'
@@ -206,4 +206,4 @@ for ((i = 0; i < COUNT; i++)); do
 done
 
 cleanup_tmp
-echo "=== ${COUNT} 件とも一致しました ==="
+echo "${C_GREEN}=== ${COUNT} 件とも一致しました ===${C_RESET}"

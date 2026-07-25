@@ -51,6 +51,23 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 
 ---
 
+## 出力の見た目
+
+`run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、結果を見やすくするため次の表示を行う。
+
+- ステータスタグに色を付ける（端末出力時のみ。パイプ/リダイレクト先では自動的に無色になる。
+  `NO_COLOR=1` を設定すると常に無色にできる）
+  - 緑: `AC` / `OK` / `DEBUG-OK` / `TRACE-OK`
+  - 赤: `WA` / `RE` / `MISMATCH` / `DEBUG-RE` / `TRACE-RE` / `GEN-ERROR` / `BRUTE-ERROR`
+  - 黄: `TLE`
+  - シアン: `RUN`
+- サンプル1件だけ実行したとき（`run 0` / `py 5` など）は `--- input ---` / `--- output ---` /
+  （WAの場合のみ）`--- expected ---` / `--- diff (expected vs actual) ---` の見出しを付けて表示する
+- `runall` / `pyall` の全サンプル実行後、`=== 全サンプルAC ===` などのまとめの右側に
+  `[AC] 3  [WA] 1  (total 4)` のような内訳を表示する
+
+---
+
 ## 実行時間制限（TLE 検出）
 
 `run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、実行時間が

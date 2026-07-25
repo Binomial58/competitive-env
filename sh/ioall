@@ -188,10 +188,10 @@ retry_trace_case() {
     fi
 
     if [ $trace_status -ne 0 ]; then
-        echo "[TRACE-RE] $label (${trace_elapsed} ms)"
+        echo "$(colored_tag TRACE-RE) $label (${trace_elapsed} ms)"
         cpp_re_print_compact_report "$trace_status" "$trace_errfile" "$DEBUG_SOURCE"
     else
-        echo "[TRACE-OK] $label (${trace_elapsed} ms)"
+        echo "$(colored_tag TRACE-OK) $label (${trace_elapsed} ms)"
         echo "  location: trace build では再現しませんでした"
     fi
 
@@ -220,13 +220,13 @@ retry_debug_case() {
     fi
 
     if [ $debug_status -ne 0 ]; then
-        echo "[DEBUG-RE] $label (${debug_elapsed} ms)"
+        echo "$(colored_tag DEBUG-RE) $label (${debug_elapsed} ms)"
         cpp_re_print_report "$debug_status" "$debug_errfile" "$DEBUG_SOURCE"
         if [ -z "$(cpp_re_extract_location "$debug_errfile" "$DEBUG_SOURCE")" ]; then
             retry_trace_case "$infile" "$label" "$tmpfile"
         fi
     else
-        echo "[DEBUG-OK] $label (${debug_elapsed} ms)"
+        echo "$(colored_tag DEBUG-OK) $label (${debug_elapsed} ms)"
         echo "  cause: debug build では再現しませんでした"
         if cpp_re_filtered_stderr_has_content "$debug_errfile"; then
             echo "  stderr:"
@@ -253,7 +253,8 @@ run_case() {
     elapsed=$((end - start))
 
     if [ $status -ne 0 ]; then
-        echo "[RE]   $label (${elapsed} ms)"
+        echo "$(colored_tag RE)   $label (${elapsed} ms)"
+        tally_add RE
         cpp_re_print_report "$status" "$errfile" "$DEBUG_SOURCE"
         mkdir -p "$FAIL_DIR"
         if [ -s "$errfile" ]; then
@@ -276,8 +277,9 @@ run_case() {
     cleanup_re_artifacts "$label"
 
     if $SINGLE; then
+        echo "${C_BOLD}--- input ---${C_RESET}"
         cat "$infile"
-        echo
+        echo "${C_BOLD}--- output ---${C_RESET}"
         cat "$tmpfile"
         echo
     fi
@@ -285,36 +287,47 @@ run_case() {
     local tl tle_note=""
     tl="$(resolve_time_limit || true)"
     if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
-        tle_note=" [TLE > ${tl} ms]"
+        tle_note=" ${C_YELLOW}[TLE > ${tl} ms]${C_RESET}"
         HAD_TLE=true
     fi
 
     if [ -f "$outfile" ]; then
         if outputs_match "$outfile" "$tmpfile"; then
             if [ -n "$tle_note" ]; then
-                echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+                echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+                tally_add TLE
                 OK_ALL=false
                 cleanup_case_artifacts "$label"
             else
-                echo "[AC]   $label (${elapsed} ms)"
+                echo "$(colored_tag AC)   $label (${elapsed} ms)"
+                tally_add AC
                 cleanup_case_artifacts "$label"
             fi
         else
-            echo "[WA]   $label (${elapsed} ms)${tle_note}"
+            echo "$(colored_tag WA)   $label (${elapsed} ms)${tle_note}"
+            tally_add WA
             mkdir -p "$FAIL_DIR"
+            if $SINGLE; then
+                echo "${C_BOLD}--- expected ---${C_RESET}"
+                cat "$outfile"
+                echo
+            fi
             if $NO_DIFF; then
                 diff -u "$outfile" "$tmpfile" > "$difffile"
             else
+                echo "${C_BOLD}--- diff (expected vs actual) ---${C_RESET}"
                 diff -u "$outfile" "$tmpfile" | tee "$difffile"
             fi
             OK_ALL=false
         fi
     else
         if [ -n "$tle_note" ]; then
-            echo "[TLE]  $label (${elapsed} ms)${tle_note}"
+            echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+            tally_add TLE
             OK_ALL=false
         else
-            echo "[RUN]  $label (${elapsed} ms)"
+            echo "$(colored_tag RUN)  $label (${elapsed} ms)"
+            tally_add RUN
         fi
         cleanup_case_artifacts "$label"
         if ! $SINGLE; then
@@ -361,7 +374,7 @@ if $OK_ALL; then
     if $SINGLE; then
         :
     else
-        echo "=== 全サンプルAC ==="
+        echo "${C_GREEN}=== 全サンプルAC ===${C_RESET} $(tally_summary)"
         if [ -d "$FAIL_DIR" ]; then
             rm -rf "$FAIL_DIR"
         fi
@@ -371,11 +384,11 @@ else
         :
     else
         if $HAD_RE; then
-            echo "=== 一部RE ==="
+            echo "${C_RED}=== 一部RE ===${C_RESET} $(tally_summary)"
         elif $HAD_TLE; then
-            echo "=== 一部TLE ==="
+            echo "${C_YELLOW}=== 一部TLE ===${C_RESET} $(tally_summary)"
         else
-            echo "=== 一部WA ==="
+            echo "${C_RED}=== 一部WA ===${C_RESET} $(tally_summary)"
         fi
     fi
 fi
