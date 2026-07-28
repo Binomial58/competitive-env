@@ -9,6 +9,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 
 ```text
 ~/competitive-env/
+├── competitive-env.zsh   （PATH・シェル関数本体。~/.zshrc からはこれを source するだけ）
 └── sh/
     ├── build.sh          （bd）
     ├── io.sh             （io / io term）
@@ -38,7 +39,11 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` は
 コマンドとして直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
 
-`.zshrc` で PATH を通して使う想定。
+`~/.zshrc` に以下の1行を書くだけで PATH・関数一式が有効になる（詳細は [env.md](env.md) 参照）。
+
+```zsh
+source "$HOME/Github/personal/competitive-programming/competitive-env/competitive-env.zsh"
+```
 
 ---
 

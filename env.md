@@ -10,15 +10,27 @@
 - `plugins=(git)`
 - `source $ZSH/oh-my-zsh.sh`
 
-## PATH
+## competitive-env のセットアップ
 
-- `export PATH="$HOME/Github/competitive-env/sh:$PATH"`
+`~/.zshrc` には以下の1行だけを書く。
+
+```zsh
+source "$HOME/Github/personal/competitive-programming/competitive-env/competitive-env.zsh"
+```
+
+PATH設定・関数の中身はすべて `competitive-env.zsh`（リポジトリ管理下）に書かれており、
+`~/.zshrc` からは `source` されるだけ。**PATHや関数を変更したいときは
+`~/.zshrc` ではなく `competitive-env.zsh` を直す**（`~/.zshrc` 側への手動コピーは不要。
+以前は `.zshrc` 全体を手動同期する方式だったが、変更の反映を忘れて
+「エラーは出ないが動いていない」状態になったことがあったため、この方式に変更した）。
+
+### PATH
+
+- `export PATH="$HOME/Github/personal/competitive-programming/competitive-env/sh:$PATH"`
 - これにより `competitive-env/sh` 配下のコマンドが直接実行可能
-- ただし `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` は
-  他スクリプトから `source` される内部専用ライブラリで、直接コマンドとして
-  呼び出すものではない
-
-## Custom Behaviors
+- ただし `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` /
+  `resolve_sibling.sh` は他スクリプトから `source` される内部専用ライブラリで、
+  直接コマンドとして呼び出すものではない
 
 ### `command_not_found_handler`
 
@@ -50,8 +62,9 @@
 ## Notes
 
 - `.zshrc` の大半は Oh My Zsh のデフォルトコメント
-- 実運用上重要なのは `PATH`・`command_not_found_handler`・`mkprob`/`mkcontest` 関数
-- このリポジトリの `.zshrc` は `~/.zshrc` の手動同期コピー（symlink ではない）。
-  pnpm インストーラなど外部ツールが `~/.zshrc` に直接追記することがあるため、
-  両者は完全には一致しない場合がある。競技プログラミング関連の関数を
-  変更したときは、リポジトリ側だけでなく `~/.zshrc` 側にも反映が必要。
+- 実運用上重要なのは `competitive-env.zsh` を `source` している1行のみ
+- リポジトリの `.zshrc` は `~/.zshrc` の参考用コピー（symlink ではない）。
+  pnpm インストーラなど外部ツールが実際の `~/.zshrc` に直接追記することがあるため、
+  両者は完全には一致しない場合がある。ただし競技プログラミング関連の設定は
+  すべて `competitive-env.zsh` に集約されているため、`.zshrc` 側の差分を
+  気にする必要はない
