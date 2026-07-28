@@ -44,6 +44,23 @@ colored_tag() {
     printf '%s[%s]%s' "$color" "$tag" "$C_RESET"
 }
 
+# expected/actual(またはbrute/main)を全文表示する際、一致する行は緑、
+# 異なる行は赤で色付けして出力する。side="old" なら old_file 側を、
+# side="new" なら new_file 側を全文出力する。
+print_diff_side() {
+    local old_file="$1"
+    local new_file="$2"
+    local side="$3"
+
+    if [ "$side" = "old" ]; then
+        diff --old-line-format="${C_RED}%L${C_RESET}" --new-line-format='' \
+             --unchanged-line-format="${C_GREEN}%L${C_RESET}" "$old_file" "$new_file"
+    else
+        diff --old-line-format='' --new-line-format="${C_RED}%L${C_RESET}" \
+             --unchanged-line-format="${C_GREEN}%L${C_RESET}" "$old_file" "$new_file"
+    fi
+}
+
 # 全サンプル実行時の集計(ioall/pyall.sh の実行結果を最後にまとめて表示するため)。
 declare -A STATUS_COUNTS=()
 

@@ -144,16 +144,16 @@ run_case() {
             echo "$(colored_tag WA)   $label (${elapsed} ms)${tle_note}"
             tally_add WA
             mkdir -p "$FAIL_DIR"
+            diff -u --label expected --label actual "$outfile" "$tmpfile" > "$difffile"
             if $SINGLE; then
                 echo "${C_BOLD}--- expected ---${C_RESET}"
-                cat "$outfile"
+                print_diff_side "$outfile" "$tmpfile" old
                 echo
-            fi
-            if $NO_DIFF; then
-                diff -u --label expected --label actual "$outfile" "$tmpfile" > "$difffile"
-            else
-                echo "${C_BOLD}--- diff (expected vs actual) ---${C_RESET}"
-                diff -u --label expected --label actual "$outfile" "$tmpfile" | tee "$difffile"
+            elif ! $NO_DIFF; then
+                echo "${C_BOLD}--- expected ---${C_RESET}"
+                print_diff_side "$outfile" "$tmpfile" old
+                echo "${C_BOLD}--- actual ---${C_RESET}"
+                print_diff_side "$outfile" "$tmpfile" new
             fi
             OK_ALL=false
         fi

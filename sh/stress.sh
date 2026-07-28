@@ -198,8 +198,10 @@ for ((i = 0; i < COUNT; i++)); do
     else
         echo "$(colored_tag MISMATCH) seed=$seed (${elapsed} ms)"
         save_failure "main と brute の出力が不一致"
-        echo "  diff:"
-        diff -u --label brute --label main "$BRUTE_OUT" "$MAIN_OUT" | sed 's/^/  /'
+        echo "  --- brute ---"
+        print_diff_side "$BRUTE_OUT" "$MAIN_OUT" old | sed 's/^/  /'
+        echo "  --- main ---"
+        print_diff_side "$BRUTE_OUT" "$MAIN_OUT" new | sed 's/^/  /'
         cleanup_tmp
         exit 1
     fi

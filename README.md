@@ -68,8 +68,10 @@ source "$HOME/Github/personal/competitive-programming/competitive-env/competitiv
   - 赤: `WA` / `RE` / `MISMATCH` / `DEBUG-RE` / `TRACE-RE` / `GEN-ERROR` / `BRUTE-ERROR`
   - 黄: `TLE`
   - シアン: `RUN`
-- サンプル1件だけ実行したとき（`run 0` / `run 5` など）は `--- input ---` / `--- output ---` /
-  （WAの場合のみ）`--- expected ---` / `--- diff (expected vs actual) ---` の見出しを付けて表示する
+- サンプル1件だけ実行したとき（`run 0` / `run 5` など）は `--- input ---` / `--- output ---` の見出しを付けて表示する
+- WAのときは `--- expected ---` / `--- actual ---` の見出しを付けて両方の出力を全文表示する
+  （diff形式ではなく全文比較。一致する行は緑、一致しない行は赤で色分けする。
+  `failures/*.diff` には従来通り `diff -u` 形式で保存される）
 - `runall` の全サンプル実行後、`=== 全サンプルAC ===` などのまとめの右側に
   `[AC] 3  [WA] 1  (total 4)` のような内訳を表示する
 
