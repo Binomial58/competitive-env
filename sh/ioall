@@ -313,10 +313,10 @@ run_case() {
                 echo
             fi
             if $NO_DIFF; then
-                diff -u "$outfile" "$tmpfile" > "$difffile"
+                diff -u --label expected --label actual "$outfile" "$tmpfile" > "$difffile"
             else
                 echo "${C_BOLD}--- diff (expected vs actual) ---${C_RESET}"
-                diff -u "$outfile" "$tmpfile" | tee "$difffile"
+                diff -u --label expected --label actual "$outfile" "$tmpfile" | tee "$difffile"
             fi
             OK_ALL=false
         fi
