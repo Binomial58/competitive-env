@@ -30,12 +30,14 @@ PATH設定・関数の中身はすべて `competitive-env.zsh`（リポジトリ
 - これにより `competitive-env/sh` 配下のコマンドが直接実行可能
 - ただし `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` /
   `resolve_sibling.sh` は他スクリプトから `source` される内部専用ライブラリで、
-  直接コマンドとして呼び出すものではない
+  直接コマンドとして呼び出すものではない。`pyall.sh` も `run`/`runall` から
+  呼ばれる内部エンジンで、直接使う専用の短縮コマンドは無い
+  （C++/Python どちらも `run`/`runi`/`runall` に一本化しており、
+  以前あった `py`/`pyrun`/`pyall` は廃止した）
 
 ### `command_not_found_handler`
 
-- `py0` 〜 `py999` を `py <番号>` として実行
-- `run0` 〜 `run999` を `run <番号>` として実行
+- `run0` 〜 `run999` を `run <番号>` として実行（C++/Pythonどちらも対応）
 - 上記以外は通常の `command not found` を表示
 
 ### `mkprob` function

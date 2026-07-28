@@ -9,12 +9,9 @@
 
 export PATH="$HOME/Github/personal/competitive-programming/competitive-env/sh:$PATH"
 
-# competitive-env: py0/run0 shorthand without wrapper files
+# competitive-env: run0/run999 shorthand without wrapper files
+# (C++/Python どちらも run が自動判別するため、run0..999 だけで両対応)
 command_not_found_handler() {
-  if [[ "$1" =~ ^py[0-9]{1,3}$ ]]; then
-    py "$@"
-    return $?
-  fi
   if [[ "$1" =~ ^run[0-9]{1,3}$ ]]; then
     run "$@"
     return $?

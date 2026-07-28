@@ -14,9 +14,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── build.sh          （bd）
     ├── io.sh             （io / io term）
     ├── ioall             （C++ 全サンプル実行）
-    ├── py                （Python 単体/番号実行）
-    ├── pyall.sh          （Python 全サンプル実行）
-    ├── pyrun             （Python 単体実行）
+    ├── pyall.sh          （内部: run/runall から呼ばれる Python サンプル実行エンジン）
     ├── run               （自動判別で単体実行）
     ├── runi              （自動判別で対話実行）
     ├── runall            （自動判別で全サンプル実行）
@@ -61,7 +59,7 @@ source "$HOME/Github/personal/competitive-programming/competitive-env/competitiv
 
 ## 出力の見た目
 
-`run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、結果を見やすくするため次の表示を行う。
+`run` / `runall` / `ioall` / `io` / `stress` は、結果を見やすくするため次の表示を行う。
 
 - ステータスタグに色を付ける（端末出力時のみ。パイプ/リダイレクト先では自動的に無色になる。
   `NO_COLOR=1` を設定すると常に無色にできる）
@@ -69,16 +67,16 @@ source "$HOME/Github/personal/competitive-programming/competitive-env/competitiv
   - 赤: `WA` / `RE` / `MISMATCH` / `DEBUG-RE` / `TRACE-RE` / `GEN-ERROR` / `BRUTE-ERROR`
   - 黄: `TLE`
   - シアン: `RUN`
-- サンプル1件だけ実行したとき（`run 0` / `py 5` など）は `--- input ---` / `--- output ---` /
+- サンプル1件だけ実行したとき（`run 0` / `run 5` など）は `--- input ---` / `--- output ---` /
   （WAの場合のみ）`--- expected ---` / `--- diff (expected vs actual) ---` の見出しを付けて表示する
-- `runall` / `pyall` の全サンプル実行後、`=== 全サンプルAC ===` などのまとめの右側に
+- `runall` の全サンプル実行後、`=== 全サンプルAC ===` などのまとめの右側に
   `[AC] 3  [WA] 1  (total 4)` のような内訳を表示する
 
 ---
 
 ## 実行時間制限（TLE 検出）
 
-`run` / `runall` / `ioall` / `pyall` / `io` / `stress` は、実行時間が
+`run` / `runall` / `ioall` / `io` / `stress` は、実行時間が
 制限を超えたら `[AC]`/`[RUN]` の代わりに `[TLE]` と表示し、失敗扱いにする。
 **デフォルトは AtCoder の標準的な制限時間 2000ms** で、何も指定しなくても
 常に判定される。
@@ -145,7 +143,7 @@ run --interactive a
 
 概要:
 - C++: `build.sh` → `ioall`
-- Python: `pyall`
+- Python: `pyall.sh`
 - AtCoder と同様に、各行末の空白とファイル末尾の改行・空行の差を無視して比較する
 - すべて通過したら **ソースを自動コピー**
 - C++ が RE した場合は sanitizer 付き debug build で同じ入力を再実行し、原因候補・該当行を表示
@@ -180,33 +178,6 @@ run --debug 0
 
 ---
 
-## pyall：Python 全サンプル一括実行
-
-概要:
-- `samples/` の `.in/.out` を全実行
-- 各行末の空白とファイル末尾の改行・空行の差を無視して比較
-- 実行時間を ms 表示
-- すべて通過したら **ソースを自動コピー**
-- NG の diff を `failures/` に保存
-- `--clean` で `failures/` を削除
-- 全サンプル OK のときは `failures/` を自動削除
-- `--sample N` でサンプル1件だけ実行（オプションと対象名はどちらを先に書いても良い）
-- 実行時間制限は既定 2000ms。`--tl N` や `tl.txt` でこの問題だけ変更できる
-
-例:
-```bash
-pyall
-pyall a
-pyall abc439_a
-pyall --clean
-pyall --clean abc439_a
-pyall --sample 5 a
-pyall a --sample 5
-pyall --tl 2000 a
-```
-
----
-
 ## ioall：C++ 全サンプル一括実行
 
 概要:
@@ -226,42 +197,6 @@ ioall
 ioall --clean
 ioall --debug-source a
 ioall --tl 2000
-```
-
----
-
-## pyrun：Python 単体実行（stdin はターミナル貼り付け）
-
-概要:
-- `python3` をそのまま実行
-- 入力はターミナルに貼り付ける運用向け
-- 自動判定は run/runall と同じ
-
-例:
-```bash
-pyrun
-pyrun a
-pyrun a.py
-```
-
----
-
-## py：Python 実行（単体 / サンプル番号指定）
-
-概要:
-- `py` / `py a` は `pyrun` と同様に Python 単体実行
-- `samples/` の `sample-<番号>.in/.out` を1件だけ検証
-- 該当サンプルが無い場合は `in.txt` を使う（`out.txt` があれば比較）
-- 実行時は **入力 → 空行 → 出力** の順に表示される
-
-例:
-```bash
-py
-py a
-py 1
-py 5
-py --sample 5 a
-py --tl 2000 --sample 5 a
 ```
 
 ---
@@ -450,7 +385,7 @@ gen/brute は Python、など）。
 
 - `seed` を `--seed-start` から1つずつ増やしながら `--count` 回繰り返す
 - 各回: `gen <seed>` → 入力 → `main` と `brute` それぞれに投入 → 出力比較
-  （行末空白・末尾改行の差は無視。`ioall`/`pyall` と同じ比較ロジック）
+  （行末空白・末尾改行の差は無視。`ioall`/`pyall.sh` と同じ比較ロジック）
 - 不一致 / `main` の異常終了(RE) / 制限時間超過(TLE、既定 2000ms。
   `--tl` か `tl.txt` で変更可)のいずれかが起きた時点で停止し、
   `stress_fail/` に `in.txt` / `main_out.txt` / `brute_out.txt` を保存する
@@ -535,7 +470,7 @@ io term
 - **`main.cpp` / `main.py` が見つからない**
   - 引数なし実行時の自動判定が失敗している。  
     フォルダ名と同名のファイルが無い or 複数ファイルがある場合は  
-    `run a` / `runall a` / `pyall a` のように明示指定する。
+    `run a` / `runall a` のように明示指定する。
 - **コピーされない**
   - `xclip` が必要。無い場合は警告を出してコピーをスキップする。
 - **`Segmentation fault` / `[RE]` の原因が分からない**
