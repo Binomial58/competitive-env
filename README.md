@@ -31,7 +31,8 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── unzips            （サンプル zip を展開して samples/ へ整形）
     ├── next              （コンテスト内の次の問題フォルダへ移動）
     ├── back              （コンテスト内の前の問題フォルダへ移動）
-    └── resolve_sibling.sh（内部共有: next/back の兄弟フォルダ解決ロジック）
+    ├── resolve_sibling.sh（内部共有: next/back の兄弟フォルダ解決ロジック）
+    └── accept            （AC後に解答を git commit）
 ```
 
 `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` は
@@ -358,7 +359,30 @@ back          # abc999/abc999_b へ戻る
 
 ---
 
-# stress：ランダムテスト（stress test）
+# accept：AC後に解答を git commit
+
+## 概要
+
+AtCoder に提出してACをもらった後、今いる問題フォルダの解答を手動で git commit する。
+push はしない（`git push` は別途手動で行う）。
+
+- 対象ファイルの自動判定は `run`/`runall` と同じ
+- `git add` するのは解答ファイル（`.cpp`/`.py`）と `in.txt` / `out.txt` / `tl.txt` / `samples/`
+  （存在するものだけ。`a.out` などのビルド成果物は含めない）
+- コミットメッセージは `# <フォルダ名を大文字化・アンダースコア除去したもの>` を先頭に、
+  解答ファイルが新規なら「解法を追加」、既存ファイルの変更なら「解法を更新」、
+  サンプル関連ファイルにも変更があれば「サンプルを追加/更新」を付け足して自動生成する
+  （例: `# ABC468D - 解法を追加 - サンプルを追加`）
+- 何もステージする変更が無い場合（変更なし、または既にコミット済み）はエラーで終了する
+- git リポジトリの外で実行するとエラーになる
+
+## 使い方
+
+```bash
+cd abc468/abc468_d
+accept
+git push   # 反映したいタイミングで別途
+```
 
 ## 概要
 

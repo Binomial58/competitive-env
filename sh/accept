@@ -1,0 +1,78 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+    echo "usage: accept [source_name]" >&2
+    echo "  今の問題フォルダの解答(+in.txt/out.txt/tl.txt/samples/)を git commit する" >&2
+    echo "  (push はしない、対象ファイルの自動判定は run/runall と同じ)" >&2
+    exit 1
+}
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        ;;
+esac
+
+[ $# -le 1 ] || usage
+
+. "$SCRIPT_DIR/resolve_target.sh"
+
+TARGET="$(resolve_target "${1:-}")" || exit 1
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "error: not inside a git repository." >&2
+    exit 1
+fi
+
+PROBLEM_ID="$(basename "$PWD" | tr '[:lower:]' '[:upper:]' | tr -d '_')"
+
+SAMPLE_PATHS=()
+for f in in.txt out.txt tl.txt; do
+    [ -f "$f" ] && SAMPLE_PATHS+=("$f")
+done
+[ -d samples ] && SAMPLE_PATHS+=("samples")
+
+ADD_PATHS=("$TARGET" "${SAMPLE_PATHS[@]}")
+git add -- "${ADD_PATHS[@]}"
+
+if git diff --cached --quiet; then
+    echo "error: no staged changes (already committed, or nothing to add)." >&2
+    exit 1
+fi
+
+# 指定パス群の変更が「追加」か「更新」かを判定する(何も変わっていなければ空文字)。
+status_word() {
+    local paths=("$@")
+    [ "${#paths[@]}" -eq 0 ] && return 0
+
+    local has_modified=false has_added=false
+    local status path
+    while IFS=$'\t' read -r status path; do
+        case "$status" in
+            A) has_added=true ;;
+            M|R*|C*) has_modified=true ;;
+        esac
+    done < <(git diff --cached --name-status -- "${paths[@]}")
+
+    if $has_modified; then
+        echo "更新"
+    elif $has_added; then
+        echo "追加"
+    fi
+}
+
+SOLUTION_WORD="$(status_word "$TARGET")"
+SAMPLE_WORD="$(status_word "${SAMPLE_PATHS[@]}")"
+
+MSG="# ${PROBLEM_ID}"
+if [ -n "$SOLUTION_WORD" ]; then
+    MSG="$MSG - 解法を${SOLUTION_WORD}"
+fi
+if [ -n "$SAMPLE_WORD" ]; then
+    MSG="$MSG - サンプルを${SAMPLE_WORD}"
+fi
+
+git commit -m "$MSG"
