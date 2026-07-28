@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    echo "usage: back" >&2
+    echo "  cd's to the previous sibling problem folder (<contest_prefix>_<suffix>)" >&2
+    echo "  in the same contest, ordered by folder name" >&2
+    exit 1
+}
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        ;;
+esac
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/resolve_sibling.sh"
+
+resolve_sibling_dir back

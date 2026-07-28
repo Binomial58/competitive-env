@@ -144,3 +144,16 @@ mkcontest() {
   fi
   return $exit_status
 }
+
+# competitive-env: next/back でコンテスト内の隣の問題フォルダへ移動
+next() {
+  local target
+  target="$(command next)" || return $?
+  cd "$target" || return $?
+}
+
+back() {
+  local target
+  target="$(command back)" || return $?
+  cd "$target" || return $?
+}

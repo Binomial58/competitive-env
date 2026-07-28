@@ -29,11 +29,14 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
     ├── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
     ├── fetchsample       （Windows Downloads の zip を問題フォルダへ取り込み）
-    └── unzips            （サンプル zip を展開して samples/ へ整形）
+    ├── unzips            （サンプル zip を展開して samples/ へ整形）
+    ├── next              （コンテスト内の次の問題フォルダへ移動）
+    ├── back              （コンテスト内の前の問題フォルダへ移動）
+    └── resolve_sibling.sh（内部共有: next/back の兄弟フォルダ解決ロジック）
 ```
 
-`resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` はコマンドとして
-直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
+`resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` は
+コマンドとして直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
 
 `.zshrc` で PATH を通して使う想定。
 
@@ -384,6 +387,33 @@ abc468/
 │   ├── in.txt
 │   └── out.txt
 ...(abc468_g まで同様)
+```
+
+---
+
+# next / back：隣の問題フォルダへ移動
+
+## 概要
+
+`mkcontest` で作った `<contest_prefix>/<contest_prefix>_<suffix>/` という構成の中で、
+今いる問題フォルダから見て次/前の問題フォルダへ `cd` する。
+
+- 提出してACをもらった後、次の問題へ手で `cd ../abc999_b` する手間を省くためのもの
+- ローカルのサンプルがAC しているかどうかは見ない（提出してのACとは別物なので、
+  ツール側では判定しない。あくまで移動するだけ）
+- 兄弟フォルダは「親ディレクトリ名 + `_`」から始まるフォルダ名をフォルダ名順（`sort`）に
+  並べたものとして解決する（`abc999/` 配下の `abc999_a`, `abc999_b`, `abc999_ex` など）
+- 最初/最後の問題でさらに `next`/`back` すると `error: already at the last/first problem ...` で失敗する
+- 兄弟フォルダが見つからない場合や、今のフォルダが `<contest_prefix>_*` の命名に沿っていない場合も
+  エラーになる（`mkprob` で単発に作った、コンテストに属さない問題フォルダなど）
+
+## 使い方
+
+```bash
+cd abc999/abc999_a
+next          # abc999/abc999_b へ移動
+next          # abc999/abc999_c へ移動
+back          # abc999/abc999_b へ戻る
 ```
 
 ---
