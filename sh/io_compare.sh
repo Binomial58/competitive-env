@@ -18,6 +18,9 @@ else
     C_GREEN=""; C_RED=""; C_YELLOW=""; C_CYAN=""; C_MAGENTA=""; C_BOLD=""; C_DIM=""; C_RESET=""
 fi
 
+# ステータスタグ([AC] 等)を色付きで出力する。パディング幅は呼び出し側の
+# 既存の見た目(タグ直後のスペース数)をそのまま維持するため、タグと
+# 残りの文字列を別引数で受け取り呼び出し側で結合できるようにする。
 status_color() {
     case "$1" in
         AC|OK|DEBUG-OK|TRACE-OK)
@@ -33,33 +36,12 @@ status_color() {
     esac
 }
 
-# 色が付かない環境(NO_COLOR/パイプ出力)でも記号だけで判別できるようにする。
-status_symbol() {
-    case "$1" in
-        AC|OK|DEBUG-OK|TRACE-OK)
-            echo "✓" ;;
-        WA|RE|MISMATCH|DEBUG-RE|TRACE-RE|GEN-ERROR|BRUTE-ERROR)
-            echo "✗" ;;
-        TLE)
-            echo "⏱" ;;
-        RUN)
-            echo "▶" ;;
-        *)
-            echo "•" ;;
-    esac
-}
-
-# "✓ AC" のように記号+色付きタグを、指定幅(既定8)に揃えて返す。
-# パディングは色コードを付ける前の生のタグ文字列に対して行う
-# (ANSIエスケープを含めた文字列にパディングをかけると見た目の桁がずれるため)。
-print_status() {
+# "[TAG]" 部分だけ色付けした文字列を返す(前後の空白はそのまま呼び出し側で付与する)。
+colored_tag() {
     local tag="$1"
-    local width="${2:-8}"
-    local symbol color padded
-    symbol="$(status_symbol "$tag")"
+    local color
     color="$(status_color "$tag")"
-    padded="$(printf '%-*s' "$width" "$tag")"
-    printf '%s %s%s%s' "$symbol" "$color" "$padded" "$C_RESET"
+    printf '%s[%s]%s' "$color" "$tag" "$C_RESET"
 }
 
 # 全サンプル実行時の集計(ioall/pyall.sh の実行結果を最後にまとめて表示するため)。
@@ -70,18 +52,15 @@ tally_add() {
     STATUS_COUNTS["$tag"]=$(( ${STATUS_COUNTS["$tag"]:-0} + 1 ))
 }
 
-# 例: "✓AC 3  ✗WA 1  (total 4)" を色付きで返す。
+# 例: "AC 3  WA 1  (total 4)" を色付きで返す。
 tally_summary() {
     local tag n total=0
     local parts=()
-    local symbol color
     for tag in AC WA RE TLE RUN; do
         n="${STATUS_COUNTS[$tag]:-0}"
         total=$((total + n))
         if [ "$n" -gt 0 ]; then
-            symbol="$(status_symbol "$tag")"
-            color="$(status_color "$tag")"
-            parts+=("${symbol}${color}${tag}${C_RESET} ${n}")
+            parts+=("$(colored_tag "$tag") ${n}")
         fi
     done
     printf '%s  (total %d)\n' "${parts[*]}" "$total"

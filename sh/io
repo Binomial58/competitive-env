@@ -100,13 +100,13 @@ retry_debug() {
     debug_elapsed=$((debug_end - debug_start))
 
     if [ $debug_status -ne 0 ]; then
-        echo "$(print_status DEBUG-RE) in.txt (${debug_elapsed} ms)"
+        echo "$(colored_tag DEBUG-RE) in.txt (${debug_elapsed} ms)"
         cpp_re_print_report "$debug_status" "$debug_errfile" "$DEBUG_SOURCE"
         if [ -z "$(cpp_re_extract_location "$debug_errfile" "$DEBUG_SOURCE")" ]; then
             retry_trace "$outfile"
         fi
     else
-        echo "$(print_status DEBUG-OK) in.txt (${debug_elapsed} ms)"
+        echo "$(colored_tag DEBUG-OK) in.txt (${debug_elapsed} ms)"
         echo "  cause: debug build では再現しませんでした"
         if cpp_re_filtered_stderr_has_content "$debug_errfile"; then
             echo "  stderr:"
@@ -140,10 +140,10 @@ retry_trace() {
     trace_elapsed=$((trace_end - trace_start))
 
     if [ $trace_status -ne 0 ]; then
-        echo "$(print_status TRACE-RE) in.txt (${trace_elapsed} ms)"
+        echo "$(colored_tag TRACE-RE) in.txt (${trace_elapsed} ms)"
         cpp_re_print_compact_report "$trace_status" "$trace_errfile" "$DEBUG_SOURCE"
     else
-        echo "$(print_status TRACE-OK) in.txt (${trace_elapsed} ms)"
+        echo "$(colored_tag TRACE-OK) in.txt (${trace_elapsed} ms)"
         echo "  location: trace build では再現しませんでした"
     fi
 
@@ -163,7 +163,7 @@ end=$(date +%s%3N)
 elapsed=$((end - start))
 
 if [ $status -ne 0 ]; then
-    echo "$(print_status RE) in.txt (${elapsed} ms)"
+    echo "$(colored_tag RE)   in.txt (${elapsed} ms)"
     cpp_re_print_report "$status" "in.err" "$DEBUG_SOURCE"
     if $DEBUG_RETRY && [ "$RUN_EXE" != "$DEBUG_EXE" ]; then
         retry_debug "in.err" "out.txt"
@@ -187,7 +187,7 @@ cleanup_generated_binaries
 
 tl="$(resolve_time_limit || true)"
 if [ -n "$tl" ] && [ "$elapsed" -gt "$tl" ]; then
-    echo "$(print_status TLE) ${elapsed} ms > ${tl} ms"
+    echo "$(colored_tag TLE)  ${elapsed} ms > ${tl} ms"
     exit 1
 fi
-echo "✓ ${C_GREEN}Time${C_RESET}     ${elapsed} ms"
+echo "${C_GREEN}[Time]${C_RESET} ${elapsed} ms"
