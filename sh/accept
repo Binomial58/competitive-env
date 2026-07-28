@@ -4,23 +4,46 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "usage: accept [source_name]" >&2
-    echo "  今の問題フォルダの解答(+in.txt/out.txt/tl.txt/samples/)を git commit する" >&2
-    echo "  (push はしない、対象ファイルの自動判定は run/runall と同じ)" >&2
+    echo "usage: accept [--no-push] [source_name]" >&2
+    echo "  今の問題フォルダの解答(+in.txt/out.txt/tl.txt/samples/)を git commit し、" >&2
+    echo "  デフォルトでは続けて git push も行う" >&2
+    echo "  --no-push: commit だけ行い push はしない" >&2
+    echo "  対象ファイルの自動判定は run/runall と同じ" >&2
     exit 1
 }
 
-case "${1:-}" in
-    --help|-h)
-        usage
-        ;;
-esac
+PUSH=true
+SOURCE_ARG=""
 
-[ $# -le 1 ] || usage
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --no-push)
+            PUSH=false
+            shift
+            ;;
+        --help|-h)
+            usage
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            if [ -z "$SOURCE_ARG" ]; then
+                SOURCE_ARG="$1"
+            else
+                usage
+            fi
+            shift
+            ;;
+    esac
+done
+
+[ $# -eq 0 ] || usage
 
 . "$SCRIPT_DIR/resolve_target.sh"
 
-TARGET="$(resolve_target "${1:-}")" || exit 1
+TARGET="$(resolve_target "$SOURCE_ARG")" || exit 1
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "error: not inside a git repository." >&2
@@ -76,3 +99,20 @@ if [ -n "$SAMPLE_WORD" ]; then
 fi
 
 git commit -m "$MSG"
+
+if $PUSH; then
+    if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+        PUSH_CMD=(git push)
+    else
+        # 現在のブランチにまだ upstream が無ければ初回設定込みで push する
+        CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+        PUSH_CMD=(git push --set-upstream origin "$CURRENT_BRANCH")
+    fi
+
+    if "${PUSH_CMD[@]}"; then
+        echo "[PUSHED]"
+    else
+        echo "warning: commit succeeded but git push failed. push manually later." >&2
+        exit 1
+    fi
+fi

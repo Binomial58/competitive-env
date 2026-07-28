@@ -363,8 +363,8 @@ back          # abc999/abc999_b へ戻る
 
 ## 概要
 
-AtCoder に提出してACをもらった後、今いる問題フォルダの解答を手動で git commit する。
-push はしない（`git push` は別途手動で行う）。
+AtCoder に提出してACをもらった後、今いる問題フォルダの解答を手動で git commit し、
+続けて git push まで行う。
 
 - 対象ファイルの自動判定は `run`/`runall` と同じ
 - `git add` するのは解答ファイル（`.cpp`/`.py`）と `in.txt` / `out.txt` / `tl.txt` / `samples/`
@@ -375,13 +375,19 @@ push はしない（`git push` は別途手動で行う）。
   （例: `# ABC468D - 解法を追加 - サンプルを追加`）
 - 何もステージする変更が無い場合（変更なし、または既にコミット済み）はエラーで終了する
 - git リポジトリの外で実行するとエラーになる
+- push は `git push`（現在のブランチに upstream が無ければ
+  `git push --set-upstream origin <branch>` で初回設定込みで実行）。
+  `--force` は使わない
+- push が失敗した場合（upstream 設定済みで conflict がある場合など）は
+  警告を出して終了する。**commit 自体は成功しているので、そのままローカルには残る**
+- `--no-push` を付けると commit だけ行い push はしない
 
 ## 使い方
 
 ```bash
 cd abc468/abc468_d
-accept
-git push   # 反映したいタイミングで別途
+accept              # commit + push
+accept --no-push    # commit のみ
 ```
 
 ## 概要
