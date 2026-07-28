@@ -62,16 +62,17 @@ source "$HOME/Github/personal/competitive-programming/competitive-env/competitiv
 
 `run` / `runall` / `ioall` / `io` / `stress` は、結果を見やすくするため次の表示を行う。
 
-- ステータスタグに色を付ける（端末出力時のみ。パイプ/リダイレクト先では自動的に無色になる。
-  `NO_COLOR=1` を設定すると常に無色にできる）
-  - 緑: `AC` / `OK` / `DEBUG-OK` / `TRACE-OK`
-  - 赤: `WA` / `RE` / `MISMATCH` / `DEBUG-RE` / `TRACE-RE` / `GEN-ERROR` / `BRUTE-ERROR`
-  - 黄: `TLE`
-  - シアン: `RUN`
+- 各ステータスに記号＋色付きタグを付ける（`✓ AC` / `✗ WA` のように、列幅を揃えて表示）
+  - 記号は色が付かない環境（`NO_COLOR=1`、パイプ/リダイレクト先など）でも残るため、
+    そちらでも判別できる
+  - ✓（緑）: `AC` / `OK` / `DEBUG-OK` / `TRACE-OK`
+  - ✗（赤）: `WA` / `RE` / `MISMATCH` / `DEBUG-RE` / `TRACE-RE` / `GEN-ERROR` / `BRUTE-ERROR`
+  - ⏱（黄）: `TLE`
+  - ▶（シアン）: `RUN`
 - サンプル1件だけ実行したとき（`run 0` / `run 5` など）は `--- input ---` / `--- output ---` /
   （WAの場合のみ）`--- expected ---` / `--- diff (expected vs actual) ---` の見出しを付けて表示する
-- `runall` の全サンプル実行後、`=== 全サンプルAC ===` などのまとめの右側に
-  `[AC] 3  [WA] 1  (total 4)` のような内訳を表示する
+- `runall` の全サンプル実行後、`✓ 全サンプルAC` などのまとめの右側に
+  `✓AC 3  ✗WA 1  (total 4)` のような内訳を表示する
 
 ---
 

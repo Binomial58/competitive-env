@@ -133,15 +133,15 @@ run_case() {
     if [ -f "$outfile" ]; then
         if outputs_match "$outfile" "$tmpfile"; then
             if [ -n "$tle_note" ]; then
-                echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+                echo "$(print_status TLE) $label (${elapsed} ms)${tle_note}"
                 tally_add TLE
                 OK_ALL=false
             else
-                echo "$(colored_tag AC)   $label (${elapsed} ms)"
+                echo "$(print_status AC) $label (${elapsed} ms)"
                 tally_add AC
             fi
         else
-            echo "$(colored_tag WA)   $label (${elapsed} ms)${tle_note}"
+            echo "$(print_status WA) $label (${elapsed} ms)${tle_note}"
             tally_add WA
             mkdir -p "$FAIL_DIR"
             if $SINGLE; then
@@ -159,11 +159,11 @@ run_case() {
         fi
     else
         if [ -n "$tle_note" ]; then
-            echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
+            echo "$(print_status TLE) $label (${elapsed} ms)${tle_note}"
             tally_add TLE
             OK_ALL=false
         else
-            echo "$(colored_tag RUN)  $label (${elapsed} ms)"
+            echo "$(print_status RUN) $label (${elapsed} ms)"
             tally_add RUN
         fi
         if ! $SINGLE; then
@@ -210,7 +210,7 @@ if $OK_ALL; then
     if $SINGLE; then
         :
     else
-        echo "${C_GREEN}=== 全サンプルAC ===${C_RESET} $(tally_summary)"
+        echo "✓ ${C_GREEN}全サンプルAC${C_RESET}  $(tally_summary)"
         echo "=== コピーします ==="
         if command -v xclip >/dev/null 2>&1; then
             if xclip -selection clipboard < "$PY_FILE"; then
@@ -230,9 +230,9 @@ else
         :
     else
         if $HAD_TLE; then
-            echo "${C_YELLOW}=== 一部TLE ===${C_RESET} $(tally_summary)"
+            echo "⏱ ${C_YELLOW}一部TLE${C_RESET}  $(tally_summary)"
         else
-            echo "${C_RED}=== 一部WA ===${C_RESET} $(tally_summary)"
+            echo "✗ ${C_RED}一部WA${C_RESET}  $(tally_summary)"
         fi
     fi
 fi
