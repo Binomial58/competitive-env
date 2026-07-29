@@ -436,6 +436,10 @@ using fastio::read_set;
     vector<type> name(size, init)
 #define VVI(type, name, h, w, init) \
     vector<vector<type>> name(h, vector<type>(w, init))
+#define VVV0(type, name, d1, d2, d3) \
+    vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3)))
+#define VVVI(type, name, d1, d2, d3, init) \
+    vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3, init)))
 
 // orderedコンテナ(set/multiset等)の境界検索ヘルパー
 // GE_IT(c, x): x以上の最小要素のiterator

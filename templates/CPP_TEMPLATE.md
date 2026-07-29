@@ -146,7 +146,12 @@ printd(A); // A:1 2 3
 #define VV0(type, name, h, w) vector<vector<type>> name(h, vector<type>(w))
 #define VECI(type, name, size, init) vector<type> name(size, init)
 #define VVI(type, name, h, w, init) vector<vector<type>> name(h, vector<type>(w, init))
+#define VVV0(type, name, d1, d2, d3) vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3)))
+#define VVVI(type, name, d1, d2, d3, init) vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3, init)))
 ```
+
+- `VVV0`/`VVVI`: 3次元vector版（3次元累積和・3次元DPなどで使用）。
+  `read(...)` による入力読み込みは無い（`VV` に対する `VVV` のような読み込み版は用意していない）
 
 使用例:
 
@@ -160,6 +165,7 @@ MSET(int, ms, n);             // 重複も保持する
 VV0(ll, dist, n, n);
 VECI(ll, dp, n, -1);          // 任意の初期値
 VVI(ll, cost, n, n, (1LL << 60)); // 任意の初期値
+VVV0(ll, S, n, h + 1, w + 1);      // 3次元累積和など
 ```
 
 ---

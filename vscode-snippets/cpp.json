@@ -113,6 +113,20 @@
 		],
 		"description": "VVI(type, name, h, w, init) 初期値付き2次元配列宣言マクロ"
 	},
+	"VVV0 declare macro": {
+		"prefix": "vvv0",
+		"body": [
+			"VVV0(${1:ll}, ${2:A}, ${3:d1}, ${4:d2}, ${5:d3});"
+		],
+		"description": "VVV0(type, name, d1, d2, d3) 0初期化の3次元配列宣言マクロ"
+	},
+	"VVVI declare macro": {
+		"prefix": "vvvi",
+		"body": [
+			"VVVI(${1:ll}, ${2:A}, ${3:d1}, ${4:d2}, ${5:d3}, ${6:init});"
+		],
+		"description": "VVVI(type, name, d1, d2, d3, init) 初期値付き3次元配列宣言マクロ"
+	},
 	"sort ascending": {
 		"prefix": "sort",
 		"body": [
