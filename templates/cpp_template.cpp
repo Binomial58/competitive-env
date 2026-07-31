@@ -21,8 +21,8 @@ using u128 = __uint128_t;
 #define MAX(v) *max_element(all(v))
 
 // よく使う定数
-const int INF = (1 << 30);
-const ll INFLL = (1LL << 62);
+const int INF = (1 << 29);
+const ll INFLL = (1LL << 60);
 const ll MOD = 998244353;
 const ll MOD2 = 1000000007;
 
@@ -703,6 +703,68 @@ C reversed(C c)
 {
     reverse(c.begin(), c.end());
     return c;
+}
+
+// 反時計回り
+template <class T>
+vector<vector<T>> rotate90(const vector<vector<T>> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<vector<T>> res(w, vector<T>(h));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[j][h - 1 - i] = g[i][j];
+    return res;
+}
+
+template <class T>
+vector<vector<T>> flip_h(const vector<vector<T>> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<vector<T>> res(h, vector<T>(w));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[i][j] = g[i][w - 1 - j];
+    return res;
+}
+
+template <class T>
+vector<vector<T>> flip_v(const vector<vector<T>> &g)
+{
+    vector<vector<T>> res(g);
+    reverse(res.begin(), res.end());
+    return res;
+}
+
+template <class T>
+vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    int min_i = h, max_i = -1, min_j = w, max_j = -1;
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            if (g[i][j] != background)
+            {
+                min_i = min(min_i, i);
+                max_i = max(max_i, i);
+                min_j = min(min_j, j);
+                max_j = max(max_j, j);
+            }
+        }
+    }
+    if (max_i < min_i)
+        return {};
+
+    vector<vector<T>> res(max_i - min_i + 1, vector<T>(max_j - min_j + 1));
+    for (int i = min_i; i <= max_i; i++)
+        for (int j = min_j; j <= max_j; j++)
+            res[i - min_i][j - min_j] = g[i][j];
+    return res;
 }
 
 template <class T>

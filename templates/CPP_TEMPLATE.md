@@ -41,11 +41,16 @@ using u128 = __uint128_t;
 ### 定数
 
 ```cpp
-const int INF = (1 << 30);
-const ll INFLL = (1LL << 62);
+const int INF = (1 << 29);
+const ll INFLL = (1LL << 60);
 const ll MOD = 998244353;
 const ll MOD2 = 1000000007;
 ```
+
+- `INF`/`INFLL` は、2つ足してもオーバーフローしないように意図的に最大値の半分以下に
+  抑えている（`1 << 30` / `1LL << 62` だと `INF + INF` がそれぞれ `int`/`ll` の
+  範囲をちょうど1超えてオーバーフローするため。min-plus DP・ダブリングなどで
+  到達不能同士を足す場面で起きうる）
 
 ---
 
@@ -428,6 +433,53 @@ C reversed(C c);
 ```
 
 - 引数のコピーを反転して返す（元データは変更しない）
+
+### グリッド回転・反転
+
+```cpp
+template <class T>
+vector<vector<T>> rotate90(const vector<vector<T>> &g);
+template <class T>
+vector<vector<T>> flip_h(const vector<vector<T>> &g);
+template <class T>
+vector<vector<T>> flip_v(const vector<vector<T>> &g);
+```
+
+- `rotate90(g)`: `g`（h行w列）を反時計回りに90度回転した w行h列のグリッドを返す
+  （`result[j][h-1-i] = g[i][j]`。時計回りが欲しい場合は `result[w-1-j][i] = g[i][j]`）
+  4回適用すると元に戻る
+- `flip_h(g)`: 左右反転（`result[i][j] = g[i][w-1-j]`）。サイズは変わらない
+- `flip_v(g)`: 上下反転（`result[i][j] = g[h-1-i][j]`）。サイズは変わらない
+- いずれも `g` は空でない矩形グリッド（全行の長さが揃っている）を前提とする。
+  空グリッドやジャグ配列のチェックは行わない
+- `rotate90` と `flip_h`（または `flip_v`）を組み合わせれば、回転4種×反転2種＝
+  8種類（二面体群D4）の変換を網羅できる（回転・反転を許容した形状一致判定などに使う）
+
+```cpp
+VV(char, S, h, w);
+S = rotate90(S);            // 90度回転
+S = rotate90(rotate90(S));  // 180度回転
+S = flip_h(S);               // 左右反転
+```
+
+### グリッドのバウンディングボックス切り詰め
+
+```cpp
+template <class T>
+vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background);
+```
+
+- `g` の中で `background` と異なる値を持つセルの最小矩形（バウンディングボックス）
+  に切り詰めて返す
+- 該当セルが1つも無ければ空のグリッド（`{}`、0行）を返す
+- `rotate90`/`flip_h`/`flip_v` と組み合わせて、回転・反転のたびに余白を
+  揃え直す用途を想定（形状比較の前処理など）
+
+```cpp
+VV(char, S, h, w);
+S = trim_grid(S, '.');           // '.' 以外を含む最小矩形に切り詰め
+S = trim_grid(rotate90(S), '.'); // 回転してから切り詰め
+```
 
 ### 総和
 
