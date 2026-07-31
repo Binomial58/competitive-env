@@ -718,6 +718,17 @@ vector<vector<T>> rotate90(const vector<vector<T>> &g)
     return res;
 }
 
+inline vector<string> rotate90(const vector<string> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<string> res(w, string(h, ' '));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[j][h - 1 - i] = g[i][j];
+    return res;
+}
+
 template <class T>
 vector<vector<T>> flip_h(const vector<vector<T>> &g)
 {
@@ -730,10 +741,28 @@ vector<vector<T>> flip_h(const vector<vector<T>> &g)
     return res;
 }
 
+inline vector<string> flip_h(const vector<string> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<string> res(h, string(w, ' '));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[i][j] = g[i][w - 1 - j];
+    return res;
+}
+
 template <class T>
 vector<vector<T>> flip_v(const vector<vector<T>> &g)
 {
     vector<vector<T>> res(g);
+    reverse(res.begin(), res.end());
+    return res;
+}
+
+inline vector<string> flip_v(const vector<string> &g)
+{
+    vector<string> res(g);
     reverse(res.begin(), res.end());
     return res;
 }
@@ -761,6 +790,34 @@ vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background)
         return {};
 
     vector<vector<T>> res(max_i - min_i + 1, vector<T>(max_j - min_j + 1));
+    for (int i = min_i; i <= max_i; i++)
+        for (int j = min_j; j <= max_j; j++)
+            res[i - min_i][j - min_j] = g[i][j];
+    return res;
+}
+
+inline vector<string> trim_grid(const vector<string> &g, char background)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    int min_i = h, max_i = -1, min_j = w, max_j = -1;
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            if (g[i][j] != background)
+            {
+                min_i = min(min_i, i);
+                max_i = max(max_i, i);
+                min_j = min(min_j, j);
+                max_j = max(max_j, j);
+            }
+        }
+    }
+    if (max_i < min_i)
+        return {};
+
+    vector<string> res(max_i - min_i + 1, string(max_j - min_j + 1, ' '));
     for (int i = min_i; i <= max_i; i++)
         for (int j = min_j; j <= max_j; j++)
             res[i - min_i][j - min_j] = g[i][j];

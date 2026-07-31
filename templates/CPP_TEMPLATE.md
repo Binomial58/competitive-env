@@ -454,12 +454,20 @@ vector<vector<T>> flip_v(const vector<vector<T>> &g);
   空グリッドやジャグ配列のチェックは行わない
 - `rotate90` と `flip_h`（または `flip_v`）を組み合わせれば、回転4種×反転2種＝
   8種類（二面体群D4）の変換を網羅できる（回転・反転を許容した形状一致判定などに使う）
+- `vector<vector<T>>` 版とは別に `vector<string>` 用のオーバーロードも用意している
+  （`string` は `vector<char>` とは別の型でテンプレート引数推論に乗らないため）。
+  グリッド問題は入力が文字列で来ることが多く、`vector<string>` のまま
+  扱えた方が楽な場合はこちらを使う
 
 ```cpp
 VV(char, S, h, w);
 S = rotate90(S);            // 90度回転
 S = rotate90(rotate90(S));  // 180度回転
 S = flip_h(S);               // 左右反転
+
+vector<string> G(h);
+read(G);                    // 1行1文字列として読む場合
+G = rotate90(G);            // vector<string> 版がそのまま使える
 ```
 
 ### グリッドのバウンディングボックス切り詰め
@@ -474,6 +482,8 @@ vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background);
 - 該当セルが1つも無ければ空のグリッド（`{}`、0行）を返す
 - `rotate90`/`flip_h`/`flip_v` と組み合わせて、回転・反転のたびに余白を
   揃え直す用途を想定（形状比較の前処理など）
+- `rotate90`/`flip_h`/`flip_v` 同様、`vector<string>` 用のオーバーロード
+  （`vector<string> trim_grid(const vector<string> &g, char background)`）もある
 
 ```cpp
 VV(char, S, h, w);
