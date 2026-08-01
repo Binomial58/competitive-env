@@ -32,11 +32,13 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── next              （コンテスト内の次の問題フォルダへ移動）
     ├── back              （コンテスト内の前の問題フォルダへ移動）
     ├── resolve_sibling.sh（内部共有: next/back の兄弟フォルダ解決ロジック）
-    └── accept            （AC後に解答を git commit）
+    ├── accept            （AC後に解答を git commit + push）
+    ├── save              （リポジトリ全体を雑に git commit + push）
+    └── git_push.sh       （内部共有: accept/save の push ロジック）
 ```
 
-`resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` は
-コマンドとして直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
+`resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` /
+`git_push.sh` はコマンドとして直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
 
 `~/.zshrc` に以下の1行を書くだけで PATH・関数一式が有効になる（詳細は [env.md](env.md) 参照）。
 
@@ -390,6 +392,31 @@ AtCoder に提出してACをもらった後、今いる問題フォルダの解�
 cd abc468/abc468_d
 accept              # commit + push
 accept --no-push    # commit のみ
+```
+
+---
+
+# save：リポジトリ全体を雑に commit + push
+
+## 概要
+
+`accept` が1問単位・構造化コミットメッセージなのに対し、`save` は
+「今リポジトリ内にある変更を全部まとめて commit + push したい」ときに使う。
+実行しているディレクトリに関係なく、リポジトリ全体が対象になる。
+
+- `git add -A` でリポジトリ全体の変更（新規・更新・削除）をステージする
+- コミットメッセージは省略時 `wip: <日時>`（引数で明示指定も可）
+- ステージする変更が無ければエラーで終了する
+- push の挙動は `accept` と同じ（upstream 未設定なら初回設定込みで push、
+  `--force` は使わない、push 失敗時は警告のみでcommit自体は残る）
+- `--no-push` を付けると commit だけ行い push はしない
+
+## 使い方
+
+```bash
+save                          # git add -A → commit(wip: 日時) → push
+save "整理中"                  # メッセージを指定
+save --no-push                # commit のみ
 ```
 
 ## 概要

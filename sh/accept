@@ -101,15 +101,8 @@ fi
 git commit -m "$MSG"
 
 if $PUSH; then
-    if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
-        PUSH_CMD=(git push)
-    else
-        # 現在のブランチにまだ upstream が無ければ初回設定込みで push する
-        CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-        PUSH_CMD=(git push --set-upstream origin "$CURRENT_BRANCH")
-    fi
-
-    if "${PUSH_CMD[@]}"; then
+    . "$SCRIPT_DIR/git_push.sh"
+    if push_current_branch; then
         echo "[PUSHED]"
     else
         echo "warning: commit succeeded but git push failed. push manually later." >&2
