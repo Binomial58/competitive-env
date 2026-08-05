@@ -208,7 +208,6 @@ namespace fastio
     template <class... Ts>
     void wt(const tuple<Ts...> &t) { wt_tuple(t); }
 
-    // コンテナ内要素を再帰的に出力するための前方宣言
     template <class T>
     void wt(const set<T> &s);
     template <class T>
