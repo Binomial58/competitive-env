@@ -1,3 +1,4 @@
+// ライブラリ: https://github.com/Binomial58/Library
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -512,6 +513,18 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
 #define DISCARD_ALL(c, x) discard_all((c), (x))
 
 template <class T>
+int bisect_left(const vector<T> &v, const T &x)
+{
+    return int(lower_bound(v.begin(), v.end(), x) - v.begin());
+}
+
+template <class T>
+int bisect_right(const vector<T> &v, const T &x)
+{
+    return int(upper_bound(v.begin(), v.end(), x) - v.begin());
+}
+
+template <class T>
 T isqrt(T n)
 {
     T r = (T)sqrtl((long double)n);
@@ -530,15 +543,17 @@ bool is_square(T n)
 }
 
 template <class T>
-int bisect_left(const vector<T> &v, const T &x)
+T ipow(T a, long long e)
 {
-    return int(lower_bound(v.begin(), v.end(), x) - v.begin());
-}
-
-template <class T>
-int bisect_right(const vector<T> &v, const T &x)
-{
-    return int(upper_bound(v.begin(), v.end(), x) - v.begin());
+    T r = 1;
+    while (e > 0)
+    {
+        if (e & 1)
+            r *= a;
+        a *= a;
+        e >>= 1;
+    }
+    return r;
 }
 
 // argsort(v): vを昇順に見たときのindex列
@@ -581,18 +596,55 @@ void sort_by_key(vector<Key, Alloc> &key, Vecs &...vs)
     apply_order(order, key, vs...);
 }
 
-template <class T>
-T ipow(T a, long long e)
+template <class C>
+C reversed(C c)
 {
-    T r = 1;
-    while (e > 0)
-    {
-        if (e & 1)
-            r *= a;
-        a *= a;
-        e >>= 1;
-    }
-    return r;
+    reverse(c.begin(), c.end());
+    return c;
+}
+
+template <class T>
+T sum(const vector<T> &v)
+{
+    return accumulate(v.begin(), v.end(), T(0));
+}
+
+template <class T>
+ld sum_ld(const vector<T> &v)
+{
+    return accumulate(v.begin(), v.end(), 0.0L);
+}
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    vector<T, AllocA> res;
+    res.reserve(a.size() + b.size());
+    res.insert(res.end(), a.begin(), a.end());
+    res.insert(res.end(), b.begin(), b.end());
+    return res;
+}
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    return concat(a, b);
+}
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b)
+{
+    a.insert(a.end(), b.begin(), b.end());
+    return a;
+}
+
+template <class T, size_t N, size_t M>
+array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b)
+{
+    array<T, N + M> res{};
+    copy(a.begin(), a.end(), res.begin());
+    copy(b.begin(), b.end(), res.begin() + N);
+    return res;
 }
 
 // 区切り文字付きjoinヘルパー
@@ -693,13 +745,6 @@ inline string replace(string s, char from, char to)
 {
     std::replace(s.begin(), s.end(), from, to);
     return s;
-}
-
-template <class C>
-C reversed(C c)
-{
-    reverse(c.begin(), c.end());
-    return c;
 }
 
 template <class T>
@@ -817,50 +862,6 @@ inline vector<string> trim_grid(const vector<string> &g, char background)
     for (int i = min_i; i <= max_i; i++)
         for (int j = min_j; j <= max_j; j++)
             res[i - min_i][j - min_j] = g[i][j];
-    return res;
-}
-
-template <class T>
-T sum(const vector<T> &v)
-{
-    return accumulate(v.begin(), v.end(), T(0));
-}
-
-template <class T>
-ld sum_ld(const vector<T> &v)
-{
-    return accumulate(v.begin(), v.end(), 0.0L);
-}
-
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
-{
-    vector<T, AllocA> res;
-    res.reserve(a.size() + b.size());
-    res.insert(res.end(), a.begin(), a.end());
-    res.insert(res.end(), b.begin(), b.end());
-    return res;
-}
-
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b)
-{
-    return concat(a, b);
-}
-
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b)
-{
-    a.insert(a.end(), b.begin(), b.end());
-    return a;
-}
-
-template <class T, size_t N, size_t M>
-array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b)
-{
-    array<T, N + M> res{};
-    copy(a.begin(), a.end(), res.begin());
-    copy(b.begin(), b.end(), res.begin() + N);
     return res;
 }
 
