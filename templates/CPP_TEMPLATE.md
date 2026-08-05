@@ -262,6 +262,33 @@ int cnt = DISCARD_ALL(ms, x); // multiset で全部
 
 ## 5. 補助関数
 
+### `chmin` / `chmax`
+
+```cpp
+template <class T, class U> bool chmin(T &x, const U &y);
+template <class T, class U> bool chmax(T &x, const U &y);
+```
+
+- `chmin(x, y)`: `y < x` なら `x = y` に更新して `true` を返す。更新しなければ `false`
+- `chmax(x, y)`: `x < y` なら `x = y` に更新して `true` を返す。更新しなければ `false`
+- 最適化DPの遷移や「候補を全部試して最良値を残す」処理の短縮形。
+  代入先を1回しか書かないので、`dp[i][j]` のような長い式でも添字の書き間違いが起きにくい
+- 戻り値で「更新できたか」が分かるので、Dijkstra の「距離を縮められたときだけ
+  キューに積む」のような条件付き処理が1行で書ける
+- `T` と `U` は別型でもよい（`chmin(ll変数, int値)` など）。更新時は `T` にキャストして代入する
+
+```cpp
+// DP遷移
+chmin(dp[i + 1], dp[i] + cost);
+
+// 候補の最大値を集める
+ll best = -INFLL;
+for (auto v : candidates) chmax(best, v);
+
+// Dijkstra: 更新できたときだけ push
+if (chmin(dist[to], dist[v] + w)) pq.push({dist[to], to});
+```
+
 ### 二分探索（`vector`）
 
 ```cpp
@@ -486,14 +513,22 @@ string u = replace(s, 'a', 'z');   // "zbzbz"
 template <class T>
 vector<vector<T>> rotate90(const vector<vector<T>> &g);
 template <class T>
+vector<vector<T>> rotate90_cw(const vector<vector<T>> &g);
+template <class T>
+vector<vector<T>> rotate180(const vector<vector<T>> &g);
+template <class T>
 vector<vector<T>> flip_h(const vector<vector<T>> &g);
 template <class T>
 vector<vector<T>> flip_v(const vector<vector<T>> &g);
 ```
 
-- `rotate90(g)`: `g`（h行w列）を反時計回りに90度回転した w行h列のグリッドを返す
-  （`result[j][h-1-i] = g[i][j]`。時計回りが欲しい場合は `result[w-1-j][i] = g[i][j]`）
-  4回適用すると元に戻る
+- `rotate90(g)`: `g`（h行w列）を**反時計回り**に90度回転した w行h列のグリッドを返す
+  （`result[w-1-j][i] = g[i][j]`）。4回適用すると元に戻る
+- `rotate90_cw(g)`: **時計回り**に90度回転した w行h列のグリッドを返す
+  （`result[j][h-1-i] = g[i][j]`）。`rotate90` の逆変換
+  （`rotate90(rotate90_cw(g)) == g`）
+- `rotate180(g)`: 180度回転した h行w列のグリッドを返す
+  （`result[h-1-i][w-1-j] = g[i][j]`）。`rotate90` 2回適用と同じで、2回適用すると元に戻る
 - `flip_h(g)`: 左右反転（`result[i][j] = g[i][w-1-j]`）。サイズは変わらない
 - `flip_v(g)`: 上下反転（`result[i][j] = g[h-1-i][j]`）。サイズは変わらない
 - いずれも `g` は空でない矩形グリッド（全行の長さが揃っている）を前提とする。
@@ -507,13 +542,14 @@ vector<vector<T>> flip_v(const vector<vector<T>> &g);
 
 ```cpp
 VV(char, S, h, w);
-S = rotate90(S);            // 90度回転
-S = rotate90(rotate90(S));  // 180度回転
-S = flip_h(S);               // 左右反転
+S = rotate90(S);     // 反時計回りに90度回転
+S = rotate90_cw(S);  // 時計回りに90度回転
+S = rotate180(S);    // 180度回転
+S = flip_h(S);       // 左右反転
 
 vector<string> G(h);
-read(G);                    // 1行1文字列として読む場合
-G = rotate90(G);            // vector<string> 版がそのまま使える
+read(G);             // 1行1文字列として読む場合
+G = rotate90(G);     // vector<string> 版がそのまま使える
 ```
 
 ### グリッドのバウンディングボックス切り詰め

@@ -524,6 +524,28 @@ int bisect_right(const vector<T> &v, const T &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
+template <class T, class U>
+bool chmin(T &x, const U &y)
+{
+    if (y < x)
+    {
+        x = (T)y;
+        return true;
+    }
+    return false;
+}
+
+template <class T, class U>
+bool chmax(T &x, const U &y)
+{
+    if (x < y)
+    {
+        x = (T)y;
+        return true;
+    }
+    return false;
+}
+
 template <class T>
 T isqrt(T n)
 {
@@ -755,7 +777,7 @@ vector<vector<T>> rotate90(const vector<vector<T>> &g)
     vector<vector<T>> res(w, vector<T>(h));
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
-            res[j][h - 1 - i] = g[i][j];
+            res[w - 1 - j][i] = g[i][j];
     return res;
 }
 
@@ -766,7 +788,53 @@ inline vector<string> rotate90(const vector<string> &g)
     vector<string> res(w, string(h, ' '));
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
+            res[w - 1 - j][i] = g[i][j];
+    return res;
+}
+
+template <class T>
+vector<vector<T>> rotate90_cw(const vector<vector<T>> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<vector<T>> res(w, vector<T>(h));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
             res[j][h - 1 - i] = g[i][j];
+    return res;
+}
+
+inline vector<string> rotate90_cw(const vector<string> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<string> res(w, string(h, ' '));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[j][h - 1 - i] = g[i][j];
+    return res;
+}
+
+template <class T>
+vector<vector<T>> rotate180(const vector<vector<T>> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<vector<T>> res(h, vector<T>(w));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[h - 1 - i][w - 1 - j] = g[i][j];
+    return res;
+}
+
+inline vector<string> rotate180(const vector<string> &g)
+{
+    int h = (int)g.size();
+    int w = (int)g[0].size();
+    vector<string> res(h, string(w, ' '));
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            res[h - 1 - i][w - 1 - j] = g[i][j];
     return res;
 }
 
