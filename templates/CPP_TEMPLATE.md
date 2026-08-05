@@ -262,6 +262,19 @@ int cnt = DISCARD_ALL(ms, x); // multiset で全部
 
 ## 5. 補助関数
 
+### 二分探索（`vector`）
+
+```cpp
+template <class T>
+int bisect_left(const vector<T> &v, const T &x);
+
+template <class T>
+int bisect_right(const vector<T> &v, const T &x);
+```
+
+- `bisect_left`: `x` 以上の最初の位置
+- `bisect_right`: `x` より大きい最初の位置
+
 ### 整数平方根 / 平方数判定
 
 ```cpp
@@ -289,18 +302,17 @@ if (is_square(n)) {
 }
 ```
 
-### 二分探索（`vector`）
+### べき乗
 
 ```cpp
-template <class T>
-int bisect_left(const vector<T> &v, const T &x);
-
-template <class T>
-int bisect_right(const vector<T> &v, const T &x);
+template <class T> T ipow(T a, long long e);
 ```
 
-- `bisect_left`: `x` 以上の最初の位置
-- `bisect_right`: `x` より大きい最初の位置
+- 単純な繰り返し二乗法
+- `a` の型 `T` は呼び出し時の引数から推論される（`ll a` なら `ll` で、
+  `i128 a` なら `i128` で計算される。`ipow128` のような別関数は不要）
+- オーバーフローは呼び出し側で注意（`T` の範囲内で計算されるだけで、
+  `i128` を渡しても無制限になるわけではない）
 
 ### `argsort` / 並び順の適用
 
@@ -358,17 +370,60 @@ apply_order(order, score, id);
 // id    = {1, 2, 0}
 ```
 
-### べき乗
+### 反転コピー
 
 ```cpp
-template <class T> T ipow(T a, long long e);
+template <class C>
+C reversed(C c);
 ```
 
-- 単純な繰り返し二乗法
-- `a` の型 `T` は呼び出し時の引数から推論される（`ll a` なら `ll` で、
-  `i128 a` なら `i128` で計算される。`ipow128` のような別関数は不要）
-- オーバーフローは呼び出し側で注意（`T` の範囲内で計算されるだけで、
-  `i128` を渡しても無制限になるわけではない）
+- 引数のコピーを反転して返す（元データは変更しない）
+
+### 総和
+
+```cpp
+template <class T>
+T sum(const vector<T> &v);
+```
+
+- `accumulate(..., T(0))` で `v` の要素と同じ型 `T` の合計を返す
+  （`vector<ll>` なら `ll`、`vector<i128>` なら `i128` で計算される。
+  以前は内部で `0LL` 固定だったため `vector<i128>` を渡すと各要素が
+  `ll` に切り詰められて壊れていた）
+
+### シーケンス結合（`vector` / `array`）
+
+```cpp
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, class AllocA, class AllocB>
+vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b);
+
+template <class T, size_t N, size_t M>
+array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b);
+```
+
+- `vector` は `A + B` で新しい連結ベクタを返す
+- `vector` は `A += B` で `A` の末尾に `B` を追記する
+- `concat(A, B)` でも `vector` 連結が可能
+- `array` はサイズ固定なので `concat(A, B)` で `array<T, N+M>` を新規作成して返す
+
+例:
+
+```cpp
+vector<ll> A = {1, 2, 3};
+vector<ll> B = {4, 5};
+vector<ll> C = A + B; // {1,2,3,4,5}
+A += B;               // A も {1,2,3,4,5}
+
+array<int, 2> X = {1, 2};
+array<int, 3> Y = {3, 4, 5};
+auto Z = concat(X, Y); // array<int, 5> {1,2,3,4,5}
+```
 
 ### `join` 系
 
@@ -425,15 +480,6 @@ string t = replace(s, "aba", "x"); // "xba"
 string u = replace(s, 'a', 'z');   // "zbzbz"
 ```
 
-### 反転コピー
-
-```cpp
-template <class C>
-C reversed(C c);
-```
-
-- 引数のコピーを反転して返す（元データは変更しない）
-
 ### グリッド回転・反転
 
 ```cpp
@@ -489,52 +535,6 @@ vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background);
 VV(char, S, h, w);
 S = trim_grid(S, '.');           // '.' 以外を含む最小矩形に切り詰め
 S = trim_grid(rotate90(S), '.'); // 回転してから切り詰め
-```
-
-### 総和
-
-```cpp
-template <class T>
-T sum(const vector<T> &v);
-```
-
-- `accumulate(..., T(0))` で `v` の要素と同じ型 `T` の合計を返す
-  （`vector<ll>` なら `ll`、`vector<i128>` なら `i128` で計算される。
-  以前は内部で `0LL` 固定だったため `vector<i128>` を渡すと各要素が
-  `ll` に切り詰められて壊れていた）
-
-### シーケンス結合（`vector` / `array`）
-
-```cpp
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> concat(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
-
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> operator+(const vector<T, AllocA> &a, const vector<T, AllocB> &b);
-
-template <class T, class AllocA, class AllocB>
-vector<T, AllocA> &operator+=(vector<T, AllocA> &a, const vector<T, AllocB> &b);
-
-template <class T, size_t N, size_t M>
-array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b);
-```
-
-- `vector` は `A + B` で新しい連結ベクタを返す
-- `vector` は `A += B` で `A` の末尾に `B` を追記する
-- `concat(A, B)` でも `vector` 連結が可能
-- `array` はサイズ固定なので `concat(A, B)` で `array<T, N+M>` を新規作成して返す
-
-例:
-
-```cpp
-vector<ll> A = {1, 2, 3};
-vector<ll> B = {4, 5};
-vector<ll> C = A + B; // {1,2,3,4,5}
-A += B;               // A も {1,2,3,4,5}
-
-array<int, 2> X = {1, 2};
-array<int, 3> Y = {3, 4, 5};
-auto Z = concat(X, Y); // array<int, 5> {1,2,3,4,5}
 ```
 
 ---
