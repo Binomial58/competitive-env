@@ -440,7 +440,6 @@ using fastio::read_set;
 #define VVVI(type, name, d1, d2, d3, init) \
     vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3, init)))
 
-// orderedコンテナ(set/multiset等)の境界検索ヘルパー
 // GE_IT(c, x): x以上の最小要素のiterator
 // LE_IT(c, x): x以下の最大要素のiterator（なければend）
 template <class C, class T>
@@ -696,7 +695,6 @@ inline string replace(string s, char from, char to)
     return s;
 }
 
-// 便利ユーティリティ（反転・合計・連結）
 template <class C>
 C reversed(C c)
 {
@@ -704,7 +702,6 @@ C reversed(C c)
     return c;
 }
 
-// 反時計回り
 template <class T>
 vector<vector<T>> rotate90(const vector<vector<T>> &g)
 {
@@ -867,7 +864,6 @@ array<T, N + M> concat(const array<T, N> &a, const array<T, M> &b)
     return res;
 }
 
-// 隣接リスト形式の軽量グラフ
 struct Graph
 {
     int n;
@@ -886,7 +882,6 @@ struct Graph
     const vector<int> &operator[](int i) const { return g[i]; }
 };
 
-// 隣接リスト形式の重み付きグラフ（to, weight）
 template <class W = long long>
 struct WeightedGraph
 {
