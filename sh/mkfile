@@ -1,0 +1,54 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATE_CPP="$SCRIPT_DIR/../templates/cpp_template.cpp"
+
+usage() {
+    echo "usage: mkfile <cpp|py> <name>" >&2
+    echo "  カレントディレクトリに <name>.<cpp|py> を1ファイルだけ生成する" >&2
+    echo "  (mkprob と違い新しいディレクトリは作らない。in.txt/out.txt も生成しない。" >&2
+    echo "  同じ問題フォルダに別解・別バージョンを追加したいときに使う)" >&2
+    exit 1
+}
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        ;;
+esac
+
+[ $# -eq 2 ] || usage
+
+LANG="$1"
+NAME="$2"
+
+case "$LANG" in
+    cpp|py) ;;
+    *)
+        echo "error: language must be 'cpp' or 'py'" >&2
+        exit 1
+        ;;
+esac
+
+FILE="$NAME.$LANG"
+
+if [ -e "$FILE" ]; then
+    echo "error: $FILE already exists." >&2
+    exit 1
+fi
+
+case "$LANG" in
+    cpp)
+        if [ ! -f "$TEMPLATE_CPP" ]; then
+            echo "error: template not found: $TEMPLATE_CPP" >&2
+            exit 1
+        fi
+        cp "$TEMPLATE_CPP" "$FILE"
+        echo "created C++ file: $FILE"
+        ;;
+    py)
+        touch "$FILE"
+        echo "created Python file: $FILE"
+        ;;
+esac

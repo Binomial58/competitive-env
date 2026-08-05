@@ -26,6 +26,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── resolve_target.sh （内部共有: run/runall/runi/stress の対象ファイル自動判定）
     ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・サンプル解決・TL 解決）
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
+    ├── mkfile            （カレントディレクトリに1ファイルだけ追加生成）
     ├── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
     ├── fetchsample       （Windows Downloads の zip を問題フォルダへ取り込み）
     ├── unzips            （サンプル zip を展開して samples/ へ整形）
@@ -332,6 +333,32 @@ abc468/
 │   ├── in.txt
 │   └── out.txt
 ...(abc468_g まで同様)
+```
+
+---
+
+# mkfile：カレントディレクトリに1ファイルだけ追加生成
+
+## 概要
+
+`mkprob`/`mkcontest` は必ず新しいディレクトリを作るが、同じ問題フォルダの中に
+別解・別バージョンをもう1本追加したいときは `mkfile` を使う。
+
+- 新しいディレクトリは作らない（カレントディレクトリに直接ファイルを作る）
+- `in.txt`/`out.txt` は生成・上書きしない（既存のものを使う想定。
+  複数ファイルがある状態で `run`/`runall` するときは
+  `run <name>`/`runall <name>` のようにファイル名を明示する）
+- C++ の場合はテンプレートをコピーする。Python の場合は空ファイルを作る
+- 生成先のファイルが既に存在する場合はエラーで終了する
+
+## 使い方
+
+```bash
+cd abc456/abc456_b
+mkfile cpp abc456_b2   # abc456_b2.cpp を追加生成
+mkfile py abc456_b3    # abc456_b3.py を追加生成
+
+run abc456_b2          # 複数ファイルがあるので明示指定
 ```
 
 ---
