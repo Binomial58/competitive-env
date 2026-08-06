@@ -129,6 +129,7 @@ cleanup_case_artifacts() {
 }
 
 . "$SCRIPT_DIR/io_compare.sh"
+setup_checker || exit 1
 
 build_debug_binary() {
     if $DEBUG_READY; then
@@ -292,7 +293,7 @@ run_case() {
     fi
 
     if [ -f "$outfile" ]; then
-        if outputs_match "$outfile" "$tmpfile"; then
+        if judge_matches "$infile" "$outfile" "$tmpfile"; then
             if [ -n "$tle_note" ]; then
                 echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
                 tally_add TLE

@@ -104,6 +104,42 @@ outputs_match() {
     cmp -s <(normalize_output "$expected") <(normalize_output "$actual")
 }
 
+# スペシャルジャッジ対応。カレントディレクトリに checker.cpp/checker.py が
+# あればそれをビルド/用意して CHECKER_CMD にセットする(呼び出し元が
+# SCRIPT_DIR を設定している前提。stress.sh の gen/brute と同じ命名規則)。
+# 無ければ CHECKER_CMD は空のままにする(=judge_matches が通常の exact
+# diff にフォールバックする)。checker のビルド失敗はエラーとして返す。
+CHECKER_CMD=()
+
+setup_checker() {
+    if [ -f "checker.cpp" ]; then
+        if ! CPP_OUT="./checker.out" "$SCRIPT_DIR/build.sh" checker >&2; then
+            echo "error: checker.cpp のビルドに失敗しました。" >&2
+            return 1
+        fi
+        CHECKER_CMD=(./checker.out)
+    elif [ -f "checker.py" ]; then
+        CHECKER_CMD=(python3 checker.py)
+    fi
+    return 0
+}
+
+# 正誤判定本体。checker が設定されていればそれを
+# `checker <input> <expected> <actual>` (exit 0 = 正解) として呼び、
+# 無ければ通常の exact diff (outputs_match) にフォールバックする。
+judge_matches() {
+    local infile="$1"
+    local expected="$2"
+    local actual="$3"
+
+    if [ "${#CHECKER_CMD[@]}" -gt 0 ]; then
+        "${CHECKER_CMD[@]}" "$infile" "$expected" "$actual"
+        return $?
+    fi
+
+    outputs_match "$expected" "$actual"
+}
+
 resolve_sample_input() {
     local idx="$1"
     if [ ! -d "$SAMPLE_DIR" ]; then

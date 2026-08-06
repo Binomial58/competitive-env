@@ -97,6 +97,7 @@ if [ ! -f "$PY_FILE" ]; then
 fi
 
 . "$SCRIPT_DIR/io_compare.sh"
+setup_checker || exit 1
 
 shopt -s nullglob
 OK_ALL=true
@@ -131,7 +132,7 @@ run_case() {
     fi
 
     if [ -f "$outfile" ]; then
-        if outputs_match "$outfile" "$tmpfile"; then
+        if judge_matches "$infile" "$outfile" "$tmpfile"; then
             if [ -n "$tle_note" ]; then
                 echo "$(colored_tag TLE)  $label (${elapsed} ms)${tle_note}"
                 tally_add TLE

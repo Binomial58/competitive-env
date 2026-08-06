@@ -14,6 +14,7 @@ usage() {
 
 . "$SCRIPT_DIR/resolve_target.sh"
 . "$SCRIPT_DIR/io_compare.sh"
+setup_checker || exit 1
 
 COUNT=100
 SEED_START=1
@@ -123,6 +124,9 @@ BRUTE_ERR="stress_brute_err.tmp"
 cleanup_tmp() {
     rm -f "$IN_FILE" "$MAIN_OUT" "$MAIN_ERR" "$BRUTE_OUT" "$BRUTE_ERR"
     rm -f ./stress_main.out ./stress_gen.out ./stress_brute.out
+    if [ "${#CHECKER_CMD[@]}" -gt 0 ] && [ "${CHECKER_CMD[0]}" = "./checker.out" ]; then
+        rm -f ./checker.out
+    fi
 }
 
 save_failure() {
@@ -193,7 +197,7 @@ for ((i = 0; i < COUNT; i++)); do
         exit 1
     fi
 
-    if outputs_match "$BRUTE_OUT" "$MAIN_OUT"; then
+    if judge_matches "$IN_FILE" "$BRUTE_OUT" "$MAIN_OUT"; then
         echo "$(colored_tag OK)   seed=$seed (${elapsed} ms)"
     else
         echo "$(colored_tag MISMATCH) seed=$seed (${elapsed} ms)"

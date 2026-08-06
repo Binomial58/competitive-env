@@ -24,7 +24,7 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── stress            （ランダムテスト: gen/brute と main を自動比較）
     ├── stress.sh
     ├── resolve_target.sh （内部共有: run/runall/runi/stress の対象ファイル自動判定）
-    ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・サンプル解決・TL 解決）
+    ├── io_compare.sh     （内部共有: io/ioall/pyall.sh/stress の出力比較・checker対応・サンプル解決・TL 解決）
     ├── mkprob_core.sh    （内部共有: mkprob.sh/mkcontest.sh の1問生成ロジック）
     ├── mkfile            （カレントディレクトリに1ファイルだけ追加生成）
     ├── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
@@ -446,6 +446,10 @@ save "整理中"                  # メッセージを指定
 save --no-push                # commit のみ
 ```
 
+---
+
+# stress：ランダムテスト（stress test）
+
 ## 概要
 
 ランダムな入力を生成し、遅くても確実に正しい参照実装（brute force）と
@@ -479,6 +483,8 @@ gen/brute は Python、など）。
 - `--debug` を付けると `main` だけ sanitizer 付き debug build でテストする
   （`gen`/`brute` は常に release build）
 - 最後まで不一致が無ければ成功
+- `checker.cpp`/`checker.py` があれば、brute/main の厳密一致の代わりに
+  それを使って判定する（詳細は次章「checker：スペシャルジャッジ対応」参照）
 
 ---
 
@@ -504,6 +510,54 @@ sumprob/
     ├── main_out.txt
     ├── main_err.txt    # main が RE した場合のみ
     └── brute_out.txt
+```
+
+---
+
+# checker：スペシャルジャッジ対応
+
+## 概要
+
+`run`/`runall`/`ioall`/`pyall`/`stress` は既定では「サンプル出力と完全一致するか」
+（空白正規化した文字列比較）でしか正誤判定できない。複数の正解がありうる構築問題や、
+誤差を許容する実数問題ではこれだけでは正しく判定できないため、問題フォルダに
+`checker.cpp`/`checker.py` を置くと、以降はそれを使った判定に自動的に切り替わる。
+
+## 仕様
+
+- 対象コマンド: `run` / `runall` / `ioall` / `pyall`（サンプルとの比較）、
+  `stress`（brute/mainの比較）
+- 置き場所: 問題フォルダ直下に `checker.cpp` または `checker.py`
+  （`gen.cpp`/`brute.cpp` と同じ命名規則）
+- 呼び出し形式: `checker <input_file> <expected_output_file> <actual_output_file>`
+  - `run`/`runall`/`ioall`/`pyall`: expected = サンプルの `.out`、actual = 実行結果
+  - `stress`: expected = brute の出力、actual = main の出力
+    （厳密一致ではなく「input に対して actual が妥当か」を判定する用途で使う）
+- 判定: exit 0 なら正解(AC)、非0なら不正解(WA/MISMATCH)
+- `checker.cpp` は初回実行時に `checker.out` としてビルドされる
+  （`ioall`/`pyall` では `a.out` と同様その場に残る。`stress` では実行後に削除される）
+- `checker.cpp` のビルドに失敗した場合はエラーで終了する
+- `checker.cpp`/`checker.py` が無い場合は今まで通り exact diff で判定する
+  （既存の挙動に影響しない）
+
+## 使い方
+
+```cpp
+// checker.cpp の例: 誤差 1e-6 を許容する
+#include <bits/stdc++.h>
+int main(int argc, char **argv)
+{
+    std::ifstream exp(argv[2]), act(argv[3]);
+    double e, a;
+    exp >> e;
+    act >> a;
+    return (std::fabs(e - a) < 1e-6) ? 0 : 1;
+}
+```
+
+```bash
+runall   # checker.cpp があれば自動的にそれで判定される
+stress   # checker.cpp があれば main/brute の比較にも使われる
 ```
 
 ---
