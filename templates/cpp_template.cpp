@@ -11,21 +11,44 @@ using u128 = __uint128_t;
 
 // for文の短縮マクロ
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
-#define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
+#define rep(i, a, b) for (int i = (int)(a); i < (int)(b); ++i)
 #define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
 #define srep(i, a, b, step) \
     for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
 
 // コンテナ操作の短縮マクロ
 #define all(v) (v).begin(), (v).end()
-#define MIN(v) *min_element(all(v))
-#define MAX(v) *max_element(all(v))
+
+template <class C>
+constexpr bool is_sorted_container = false;
+template <class T, class A>
+constexpr bool is_sorted_container<set<T, less<T>, A>> = true;
+template <class T, class A>
+constexpr bool is_sorted_container<multiset<T, less<T>, A>> = true;
+
+template <class C>
+auto MIN(const C &c)
+{
+    if constexpr (is_sorted_container<C>)
+        return *c.begin();
+    else
+        return *min_element(c.begin(), c.end());
+}
+
+template <class C>
+auto MAX(const C &c)
+{
+    if constexpr (is_sorted_container<C>)
+        return *c.rbegin();
+    else
+        return *max_element(c.begin(), c.end());
+}
 
 // よく使う定数
-const int INF = (1 << 29);
-const ll INFLL = (1LL << 60);
-const ll MOD = 998244353;
-const ll MOD2 = 1000000007;
+constexpr int INF = (1 << 29);
+constexpr ll INFLL = (1LL << 60);
+constexpr ll MOD = 998244353;
+constexpr ll MOD2 = 1000000007;
 
 // 型ごとにread/printを拡張した入出力ヘルパー
 namespace fastio
@@ -441,8 +464,6 @@ using fastio::read_set;
 #define VVVI(type, name, d1, d2, d3, init) \
     vector<vector<vector<type>>> name(d1, vector<vector<type>>(d2, vector<type>(d3, init)))
 
-// GE_IT(c, x): x以上の最小要素のiterator
-// LE_IT(c, x): x以下の最大要素のiterator（なければend）
 template <class C, class T>
 auto ge_it(const C &c, const T &x)
 {
@@ -464,7 +485,7 @@ typename C::value_type ge_val(const C &c, const T &x)
 {
     auto it = ge_it(c, x);
     if (it == c.end())
-        throw out_of_range("GE_VAL: no element >= x");
+        throw out_of_range("ge_val: no element >= x");
     return *it;
 }
 
@@ -473,7 +494,7 @@ typename C::value_type le_val(const C &c, const T &x)
 {
     auto it = le_it(c, x);
     if (it == c.end())
-        throw out_of_range("LE_VAL: no element <= x");
+        throw out_of_range("le_val: no element <= x");
     return *it;
 }
 
@@ -505,21 +526,14 @@ int discard_all(multiset<T, Compare, Alloc> &s, const T &x)
     return (int)s.erase(x); // remove all x
 }
 
-#define GE_IT(c, x) ge_it((c), (x))
-#define LE_IT(c, x) le_it((c), (x))
-#define GE_VAL(c, x) ge_val((c), (x))
-#define LE_VAL(c, x) le_val((c), (x))
-#define DISCARD_ONE(c, x) discard_one((c), (x))
-#define DISCARD_ALL(c, x) discard_all((c), (x))
-
-template <class T>
-int bisect_left(const vector<T> &v, const T &x)
+template <class T, class U>
+int bisect_left(const vector<T> &v, const U &x)
 {
     return int(lower_bound(v.begin(), v.end(), x) - v.begin());
 }
 
-template <class T>
-int bisect_right(const vector<T> &v, const T &x)
+template <class T, class U>
+int bisect_right(const vector<T> &v, const U &x)
 {
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
@@ -769,115 +783,91 @@ inline string replace(string s, char from, char to)
     return s;
 }
 
-template <class T>
-vector<vector<T>> rotate90(const vector<vector<T>> &g)
+constexpr int DX4[] = {1, 0, -1, 0};
+constexpr int DY4[] = {0, 1, 0, -1};
+constexpr int DX8[] = {1, 1, 0, -1, -1, -1, 0, 1};
+constexpr int DY8[] = {0, 1, 1, 1, 0, -1, -1, -1};
+
+inline bool in_grid(ll i, ll j, ll h, ll w)
+{
+    return 0 <= i && i < h && 0 <= j && j < w;
+}
+
+template <class G>
+G make_grid(int h, int w)
+{
+    using Row = typename G::value_type;
+    if constexpr (is_same_v<Row, string>)
+        return G(h, string(w, ' '));
+    else
+        return G(h, Row(w));
+}
+
+template <class G>
+G rotate90(const G &g)
 {
     int h = (int)g.size();
     int w = (int)g[0].size();
-    vector<vector<T>> res(w, vector<T>(h));
+    G res = make_grid<G>(w, h);
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
             res[w - 1 - j][i] = g[i][j];
     return res;
 }
 
-inline vector<string> rotate90(const vector<string> &g)
+template <class G>
+G rotate90_cw(const G &g)
 {
     int h = (int)g.size();
     int w = (int)g[0].size();
-    vector<string> res(w, string(h, ' '));
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            res[w - 1 - j][i] = g[i][j];
-    return res;
-}
-
-template <class T>
-vector<vector<T>> rotate90_cw(const vector<vector<T>> &g)
-{
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    vector<vector<T>> res(w, vector<T>(h));
+    G res = make_grid<G>(w, h);
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
             res[j][h - 1 - i] = g[i][j];
     return res;
 }
 
-inline vector<string> rotate90_cw(const vector<string> &g)
+template <class G>
+G rotate180(const G &g)
 {
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    vector<string> res(w, string(h, ' '));
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            res[j][h - 1 - i] = g[i][j];
+    G res(g);
+    reverse(res.begin(), res.end());
+    for (auto &row : res)
+        reverse(row.begin(), row.end());
     return res;
 }
 
-template <class T>
-vector<vector<T>> rotate180(const vector<vector<T>> &g)
+template <class G>
+G transpose(const G &g)
 {
     int h = (int)g.size();
     int w = (int)g[0].size();
-    vector<vector<T>> res(h, vector<T>(w));
+    G res = make_grid<G>(w, h);
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
-            res[h - 1 - i][w - 1 - j] = g[i][j];
+            res[j][i] = g[i][j];
     return res;
 }
 
-inline vector<string> rotate180(const vector<string> &g)
+template <class G>
+G flip_h(const G &g)
 {
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    vector<string> res(h, string(w, ' '));
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            res[h - 1 - i][w - 1 - j] = g[i][j];
+    G res(g);
+    for (auto &row : res)
+        reverse(row.begin(), row.end());
     return res;
 }
 
-template <class T>
-vector<vector<T>> flip_h(const vector<vector<T>> &g)
+template <class G>
+G flip_v(const G &g)
 {
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    vector<vector<T>> res(h, vector<T>(w));
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            res[i][j] = g[i][w - 1 - j];
-    return res;
-}
-
-inline vector<string> flip_h(const vector<string> &g)
-{
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    vector<string> res(h, string(w, ' '));
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            res[i][j] = g[i][w - 1 - j];
-    return res;
-}
-
-template <class T>
-vector<vector<T>> flip_v(const vector<vector<T>> &g)
-{
-    vector<vector<T>> res(g);
+    G res(g);
     reverse(res.begin(), res.end());
     return res;
 }
 
-inline vector<string> flip_v(const vector<string> &g)
-{
-    vector<string> res(g);
-    reverse(res.begin(), res.end());
-    return res;
-}
-
-template <class T>
-vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background)
+template <class G, class B>
+G trim_grid(const G &g, const B &background)
 {
     int h = (int)g.size();
     int w = (int)g[0].size();
@@ -898,35 +888,7 @@ vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background)
     if (max_i < min_i)
         return {};
 
-    vector<vector<T>> res(max_i - min_i + 1, vector<T>(max_j - min_j + 1));
-    for (int i = min_i; i <= max_i; i++)
-        for (int j = min_j; j <= max_j; j++)
-            res[i - min_i][j - min_j] = g[i][j];
-    return res;
-}
-
-inline vector<string> trim_grid(const vector<string> &g, char background)
-{
-    int h = (int)g.size();
-    int w = (int)g[0].size();
-    int min_i = h, max_i = -1, min_j = w, max_j = -1;
-    for (int i = 0; i < h; i++)
-    {
-        for (int j = 0; j < w; j++)
-        {
-            if (g[i][j] != background)
-            {
-                min_i = min(min_i, i);
-                max_i = max(max_i, i);
-                min_j = min(min_j, j);
-                max_j = max(max_j, j);
-            }
-        }
-    }
-    if (max_i < min_i)
-        return {};
-
-    vector<string> res(max_i - min_i + 1, string(max_j - min_j + 1, ' '));
+    G res = make_grid<G>(max_i - min_i + 1, max_j - min_j + 1);
     for (int i = min_i; i <= max_i; i++)
         for (int j = min_j; j <= max_j; j++)
             res[i - min_i][j - min_j] = g[i][j];

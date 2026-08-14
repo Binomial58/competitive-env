@@ -28,23 +28,31 @@ using u128 = __uint128_t;
 
 ```cpp
 #define rep0(i, n) for (int i = 0; i < (int)(n); ++i)
-#define rep(i, a, b) for (int i = (int)(a); i < (int)(b); i++)
+#define rep(i, a, b) for (int i = (int)(a); i < (int)(b); ++i)
 #define rrep(i, a, b) for (int i = (int)(a); i > (int)(b); --i)
 #define srep(i, a, b, step) \
     for (long long i = (a); (step) > 0 ? i < (b) : i > (b); i += (step))
 
 #define all(v) (v).begin(), (v).end()
-#define MIN(v) *min_element(all(v))
-#define MAX(v) *max_element(all(v))
+
+template <class C> auto MIN(const C &c); // 最小要素の値
+template <class C> auto MAX(const C &c); // 最大要素の値
 ```
+
+- `MIN` / `MAX` はマクロではなく関数（テンプレート）。任意のコンテナを受けて
+  最小/最大要素の値を返す。関数なので引数の式は1回しか評価されない
+- 通常は `min_element`/`max_element` の O(n) だが、**デフォルト比較の
+  `set`/`multiset` に対しては先頭/末尾を直接見る O(1)** に自動で切り替わる。
+  `set<int, greater<int>>` のようにカスタム比較の場合は、数値的な最小/最大を
+  保つため O(n) 側にフォールバックする（結果は常に `min_element` と同じ）
 
 ### 定数
 
 ```cpp
-const int INF = (1 << 29);
-const ll INFLL = (1LL << 60);
-const ll MOD = 998244353;
-const ll MOD2 = 1000000007;
+constexpr int INF = (1 << 29);
+constexpr ll INFLL = (1LL << 60);
+constexpr ll MOD = 998244353;
+constexpr ll MOD2 = 1000000007;
 ```
 
 - `INF`/`INFLL` は、2つ足してもオーバーフローしないように意図的に最大値の半分以下に
@@ -182,13 +190,13 @@ VVV0(ll, S, n, h + 1, w + 1);      // 3次元累積和など
 ### 近傍取得（iterator）
 
 ```cpp
-GE_IT(c, x)
+ge_it(c, x)
 ```
 - `x` 以上の最小要素を指す iterator（`lower_bound`）
 - 存在しなければ `c.end()`
 
 ```cpp
-LE_IT(c, x)
+le_it(c, x)
 ```
 - `x` 以下の最大要素を指す iterator
 - 存在しなければ `c.end()`
@@ -196,12 +204,12 @@ LE_IT(c, x)
 例:
 
 ```cpp
-auto it1 = GE_IT(st, x);
+auto it1 = ge_it(st, x);
 if (it1 != st.end()) {
     ll v = *it1;
 }
 
-auto it2 = LE_IT(st, x);
+auto it2 = le_it(st, x);
 if (it2 != st.end()) {
     ll v = *it2;
 }
@@ -210,8 +218,8 @@ if (it2 != st.end()) {
 ### 近傍取得（値）
 
 ```cpp
-GE_VAL(c, x)
-LE_VAL(c, x)
+ge_val(c, x)
+le_val(c, x)
 ```
 
 - 戻り値は `typename C::value_type`（値を直接返す）
@@ -220,15 +228,15 @@ LE_VAL(c, x)
 例:
 
 ```cpp
-ll a = GE_VAL(st, x); // x以上の最小要素
-ll b = LE_VAL(st, x); // x以下の最大要素
+ll a = ge_val(st, x); // x以上の最小要素
+ll b = le_val(st, x); // x以下の最大要素
 ```
 
 存在しない可能性がある場合:
 
 ```cpp
 try {
-    ll a = GE_VAL(st, x);
+    ll a = ge_val(st, x);
     print(a);
 } catch (const out_of_range &) {
     // 見つからないときの処理
@@ -238,14 +246,14 @@ try {
 ### 削除
 
 ```cpp
-DISCARD_ONE(c, x)
+discard_one(c, x)
 ```
 - `set`: `x` を削除（0 or 1 個）
 - `multiset`: `x` を **1個だけ** 削除
 - 戻り値: `bool`（削除成功なら `true`）
 
 ```cpp
-DISCARD_ALL(c, x)
+discard_all(c, x)
 ```
 - `set`: `x` を削除（0 or 1 個）
 - `multiset`: `x` を **全部** 削除
@@ -254,8 +262,8 @@ DISCARD_ALL(c, x)
 例:
 
 ```cpp
-bool ok = DISCARD_ONE(ms, x); // multiset で1個だけ
-int cnt = DISCARD_ALL(ms, x); // multiset で全部
+bool ok = discard_one(ms, x); // multiset で1個だけ
+int cnt = discard_all(ms, x); // multiset で全部
 ```
 
 ---
@@ -292,15 +300,16 @@ if (chmin(dist[to], dist[v] + w)) pq.push({dist[to], to});
 ### 二分探索（`vector`）
 
 ```cpp
-template <class T>
-int bisect_left(const vector<T> &v, const T &x);
+template <class T, class U>
+int bisect_left(const vector<T> &v, const U &x);
 
-template <class T>
-int bisect_right(const vector<T> &v, const T &x);
+template <class T, class U>
+int bisect_right(const vector<T> &v, const U &x);
 ```
 
 - `bisect_left`: `x` 以上の最初の位置
 - `bisect_right`: `x` より大きい最初の位置
+- キーは要素と別の型でもよい（`vector<ll>` に `int` のキーを渡す等。`chmin`/`chmax` と同じ方針）
 
 ### 整数平方根 / 平方数判定
 
@@ -507,19 +516,45 @@ string t = replace(s, "aba", "x"); // "xba"
 string u = replace(s, 'a', 'z');   // "zbzbz"
 ```
 
-### グリッド回転・反転
+### グリッド探索の方向配列・範囲内判定
 
 ```cpp
-template <class T>
-vector<vector<T>> rotate90(const vector<vector<T>> &g);
-template <class T>
-vector<vector<T>> rotate90_cw(const vector<vector<T>> &g);
-template <class T>
-vector<vector<T>> rotate180(const vector<vector<T>> &g);
-template <class T>
-vector<vector<T>> flip_h(const vector<vector<T>> &g);
-template <class T>
-vector<vector<T>> flip_v(const vector<vector<T>> &g);
+constexpr int DX4[] = {1, 0, -1, 0};
+constexpr int DY4[] = {0, 1, 0, -1};
+constexpr int DX8[] = {1, 1, 0, -1, -1, -1, 0, 1};
+constexpr int DY8[] = {0, 1, 1, 1, 0, -1, -1, -1};
+
+bool in_grid(ll i, ll j, ll h, ll w);
+```
+
+- `DX4`/`DY4`: 上下左右の4方向。`dx` が行方向（i）、`dy` が列方向（j）の差分
+- `DX8`/`DY8`: 斜めを含む8近傍
+- `in_grid(i, j, h, w)`: `0 <= i < h && 0 <= j < w` の短縮形。
+  `int` でも `ll` でも渡せる
+
+```cpp
+INT(h, w);
+VEC(string, S, h);  // 1行1文字列でグリッドを読む
+
+// グリッドBFSの近傍列挙
+rep0(d, 4)
+{
+    int ni = i + DX4[d], nj = j + DY4[d];
+    if (!in_grid(ni, nj, h, w) || S[ni][nj] == '#')
+        continue;
+    // ...
+}
+```
+
+### グリッド回転・反転・転置
+
+```cpp
+template <class G> G rotate90(const G &g);
+template <class G> G rotate90_cw(const G &g);
+template <class G> G rotate180(const G &g);
+template <class G> G transpose(const G &g);
+template <class G> G flip_h(const G &g);
+template <class G> G flip_v(const G &g);
 ```
 
 - `rotate90(g)`: `g`（h行w列）を**反時計回り**に90度回転した w行h列のグリッドを返す
@@ -529,34 +564,35 @@ vector<vector<T>> flip_v(const vector<vector<T>> &g);
   （`rotate90(rotate90_cw(g)) == g`）
 - `rotate180(g)`: 180度回転した h行w列のグリッドを返す
   （`result[h-1-i][w-1-j] = g[i][j]`）。`rotate90` 2回適用と同じで、2回適用すると元に戻る
+- `transpose(g)`: 転置した w行h列のグリッドを返す（`result[j][i] = g[i][j]`）。
+  `flip_v(rotate90(g))` と同じで、2回適用すると元に戻る
 - `flip_h(g)`: 左右反転（`result[i][j] = g[i][w-1-j]`）。サイズは変わらない
 - `flip_v(g)`: 上下反転（`result[i][j] = g[h-1-i][j]`）。サイズは変わらない
 - いずれも `g` は空でない矩形グリッド（全行の長さが揃っている）を前提とする。
   空グリッドやジャグ配列のチェックは行わない
 - `rotate90` と `flip_h`（または `flip_v`）を組み合わせれば、回転4種×反転2種＝
   8種類（二面体群D4）の変換を網羅できる（回転・反転を許容した形状一致判定などに使う）
-- `vector<vector<T>>` 版とは別に `vector<string>` 用のオーバーロードも用意している
-  （`string` は `vector<char>` とは別の型でテンプレート引数推論に乗らないため）。
-  グリッド問題は入力が文字列で来ることが多く、`vector<string>` のまま
-  扱えた方が楽な場合はこちらを使う
+- 実装はグリッド型 `G` を丸ごとテンプレートにした1本で、`vector<vector<T>>` でも
+  `vector<string>` でもそのまま渡せる（結果グリッドの構築は内部ヘルパー `make_grid<G>(h, w)` が
+  行型に応じて行う）。グリッド問題は入力が文字列で来ることが多く、`vector<string>` のまま扱える
 
 ```cpp
-VV(char, S, h, w);
+VEC(string, S, h);   // 1行1文字列でグリッドを読む（基本はこちら）
 S = rotate90(S);     // 反時計回りに90度回転
 S = rotate90_cw(S);  // 時計回りに90度回転
 S = rotate180(S);    // 180度回転
+S = transpose(S);    // 転置
 S = flip_h(S);       // 左右反転
 
-vector<string> G(h);
-read(G);             // 1行1文字列として読む場合
-G = rotate90(G);     // vector<string> 版がそのまま使える
+VV(int, A, h, w);    // 数値グリッドは vector<vector<T>> 版で
+A = transpose(A);
 ```
 
 ### グリッドのバウンディングボックス切り詰め
 
 ```cpp
-template <class T>
-vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background);
+template <class G, class B>
+G trim_grid(const G &g, const B &background);
 ```
 
 - `g` の中で `background` と異なる値を持つセルの最小矩形（バウンディングボックス）
@@ -564,11 +600,11 @@ vector<vector<T>> trim_grid(const vector<vector<T>> &g, const T &background);
 - 該当セルが1つも無ければ空のグリッド（`{}`、0行）を返す
 - `rotate90`/`flip_h`/`flip_v` と組み合わせて、回転・反転のたびに余白を
   揃え直す用途を想定（形状比較の前処理など）
-- `rotate90`/`flip_h`/`flip_v` 同様、`vector<string>` 用のオーバーロード
-  （`vector<string> trim_grid(const vector<string> &g, char background)`）もある
+- 他のグリッド関数と同様、`vector<vector<T>>` でも `vector<string>` でも
+  そのまま渡せる（`trim_grid(S, '.')`）
 
 ```cpp
-VV(char, S, h, w);
+VEC(string, S, h);
 S = trim_grid(S, '.');           // '.' 以外を含む最小矩形に切り詰め
 S = trim_grid(rotate90(S), '.'); // 回転してから切り詰め
 ```
