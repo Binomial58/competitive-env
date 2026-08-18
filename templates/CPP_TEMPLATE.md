@@ -145,6 +145,10 @@ printd(A); // A:1 2 3
     vector<type> name(size); \
     read(name)
 
+#define DEQ(type, name, size) \
+    deque<type> name(size); \
+    read(name)
+
 #define SET(type, name, size) \
     set<type> name = read_set<type>(size)
 
@@ -173,6 +177,7 @@ INT(n, m);
 LD(rate);
 I128(big);
 VEC(int, a, n);
+DEQ(int, dq, n);              // dequeで受け取る（両端からの追加・削除がある問題）
 SET(int, s, n);               // 重複は自動で1つにまとまる
 MSET(int, ms, n);             // 重複も保持する
 VV0(ll, dist, n, n);

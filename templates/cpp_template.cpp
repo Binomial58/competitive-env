@@ -444,6 +444,9 @@ using fastio::read_set;
 #define VEC(type, name, size) \
     vector<type> name(size);  \
     read(name)
+#define DEQ(type, name, size) \
+    deque<type> name(size);   \
+    read(name)
 #define SET(type, name, size) \
     set<type> name = read_set<type>(size)
 #define MSET(type, name, size) \
