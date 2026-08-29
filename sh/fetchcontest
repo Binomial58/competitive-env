@@ -1,0 +1,81 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+    echo "usage: fetchcontest" >&2
+    echo "  コンテストルート(mkcontest で作った <prefix>/<prefix>_<suffix>/ 構成)、" >&2
+    echo "  またはその中の問題フォルダ(<prefix>_<suffix>)で実行する" >&2
+    echo "  Windows Downloads にある <prefix>_<suffix>.zip をそれぞれの問題フォルダへ" >&2
+    echo "  振り分けて取り込み、unzips で一括展開する" >&2
+    echo "  (全問題ページを開いて Sample DL しておけば、コンテスト分を一度に取得できる)" >&2
+    exit 1
+}
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        ;;
+esac
+
+[ $# -eq 0 ] || usage
+
+. "$SCRIPT_DIR/downloads_dir.sh"
+
+DOWNLOADS_DIR="$(resolve_downloads_dir)" || {
+    echo "error: could not locate Windows Downloads folder." >&2
+    exit 1
+}
+
+PREFIX="$(basename "$PWD")"
+
+shopt -s nullglob
+PROB_DIRS=("${PREFIX}_"*/)
+shopt -u nullglob
+
+# 問題フォルダ(<prefix>_<suffix>)の中から実行された場合は、
+# 親のコンテストルートへ上がって処理する
+if [ "${#PROB_DIRS[@]}" -eq 0 ]; then
+    PARENT="$(basename "$(dirname "$PWD")")"
+    if [[ "$PREFIX" == "${PARENT}_"* ]]; then
+        cd ..
+        PREFIX="$PARENT"
+        shopt -s nullglob
+        PROB_DIRS=("${PREFIX}_"*/)
+        shopt -u nullglob
+    fi
+fi
+
+if [ "${#PROB_DIRS[@]}" -eq 0 ]; then
+    echo "error: no problem folders (${PREFIX}_*) found in $PWD." >&2
+    echo "hint: コンテストルートか、その中の問題フォルダで実行してください" >&2
+    exit 1
+fi
+
+FOUND=0
+MISSING=()
+
+for dir in "${PROB_DIRS[@]}"; do
+    dir="${dir%/}"
+    zip_src="$DOWNLOADS_DIR/$dir.zip"
+    if [ -f "$zip_src" ]; then
+        mv "$zip_src" "$dir/$dir.zip"
+        echo "[MV] $zip_src -> $dir/$dir.zip"
+        FOUND=$((FOUND + 1))
+    else
+        MISSING+=("$dir")
+    fi
+done
+
+if [ "$FOUND" -eq 0 ]; then
+    echo "error: no matching zip files found in $DOWNLOADS_DIR for ${PREFIX}_*.zip." >&2
+    exit 1
+fi
+
+"$SCRIPT_DIR/unzips"
+
+echo "=== ${FOUND} / ${#PROB_DIRS[@]} 問題ぶんのサンプルを取得しました ==="
+if [ "${#MISSING[@]}" -gt 0 ]; then
+    echo "warning: zip が見つからなかった問題: ${MISSING[*]}" >&2
+fi

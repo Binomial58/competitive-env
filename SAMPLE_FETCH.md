@@ -1,7 +1,7 @@
-# サンプル取得パイプライン仕様（`fetchsample` / `unzips`）
+# サンプル取得パイプライン仕様（`fetchsample` / `fetchcontest` / `unzips`）
 
 問題ページの入出力サンプルをブラウザから取得し、WSL側の問題フォルダに自動展開する仕組みの仕様書です。
-`sh/fetchsample` と `sh/unzips` の**現在の実装内容**をまとめています。
+`sh/fetchsample` / `sh/fetchcontest` / `sh/unzips` の**現在の実装内容**をまとめています。
 
 ---
 
@@ -58,15 +58,66 @@ fetchsample [problem_name]
 
 ### 2-4. 注意点
 
-- 常に「問題フォルダの中で」実行する想定（複数問題フォルダをまたいだ一括処理はできない。一括処理は次章の`unzips`単体呼び出しで対応）
+- 常に「問題フォルダの中で」実行する想定（複数問題フォルダをまたいだ一括処理はできない。
+  コンテスト単位の一括処理は次章の`fetchcontest`、zip単位の一括展開は4章の`unzips`単体呼び出しで対応）
 - **常に無条件で最新のzipを使う**ため、Sample DL後すぐに`fetchsample`を叩かないと、
   別の問題のzipや古いzipを誤って取り込む可能性がある（確認プロンプトは無い）
 
 ---
 
-## 3. `unzips`
+## 3. `fetchcontest`
+
+`mkcontest` で作ったコンテストルート（`abc999/abc999_a/`, `abc999_b/`, ... という構成）、
+または**その中の問題フォルダ**（`abc999_a` 等。`mkcontest` 直後のcd先のまま実行できる）で
+実行する、コンテスト単位の一括版。`fetchsample`と異なり、Downloads内のzipを
+**問題名で照合して**該当する問題フォルダへ振り分ける（「最新のzip」方式ではない）。
 
 ### 3-1. 使い方
+
+```bash
+fetchcontest
+```
+
+- 引数なし。カレントディレクトリ名（`basename "$PWD"`、例: `abc999`）をコンテストの
+  接頭辞として使う
+- `--help` / `-h`: 使い方を表示して終了
+
+### 3-2. Windows Downloadsフォルダの解決
+
+`fetchsample`と共通のロジック（`sh/downloads_dir.sh`、2-2節と同じ）を使う。
+
+### 3-3. zipファイルの特定と振り分け
+
+1. カレントディレクトリ直下の `<contest_prefix>_*` にマッチするディレクトリを列挙する
+   （カレントディレクトリ名を接頭辞として使う）
+   - 1件も無い場合、カレントディレクトリ名が `<親ディレクトリ名>_*` の形なら
+     **問題フォルダ内からの実行**とみなし、親のコンテストルートへ上がって同じ列挙をやり直す
+     （呼び出し元シェルのカレントディレクトリは変わらない）
+   - それでも1件も無ければ `error: no problem folders (<prefix>_*) found in <cwd>.` で終了
+2. 各問題フォルダについて、Downloads内に `<問題フォルダ名>.zip` があるか探す
+   （`fetchsample`と違い、**ファイル名と問題名の一致を必須とする**）
+   - 見つかった場合: `<問題フォルダ>/<問題フォルダ名>.zip` として `mv`
+     （`[MV] <元パス> -> <問題フォルダ>/<問題フォルダ名>.zip`）
+   - 見つからなかった場合: その問題はスキップし、末尾で一覧警告する（処理は継続）
+3. 1件もマッチしなかった場合は
+   `error: no matching zip files found in <Downloads> for <prefix>_*.zip.` で終了
+4. 1件以上取り込めた場合、`unzips`（引数なし）を呼び出して一括展開する
+   （4-2節の「1階層下まで探索」の挙動がそのまま使われる）
+5. 最後に `<取り込めた数> / <問題フォルダ数>` の結果と、
+   見つからなかった問題があれば `warning: zip が見つからなかった問題: <一覧>` を表示する
+
+### 3-4. 注意点
+
+- コンテストの全問題ページを開いて Sample DL を済ませてから実行する想定
+  （未訪問のページの分は取り込めず、スキップされる）
+- `fetchsample`と違い**問題名との一致が必須**なので、ブラウザ拡張がファイル名を
+  `<問題フォルダ名>.zip`と一致する形で保存している必要がある
+
+---
+
+## 4. `unzips`
+
+### 4-1. 使い方
 
 ```bash
 unzips [--keep] [zip_file ...]
@@ -81,7 +132,7 @@ unzips [--keep] [zip_file ...]
 - `--rm`: 明示的に削除する（デフォルトと同じ挙動。`--keep`と併用した場合は最後に指定した方が勝つ）
 - 前提コマンド: `unzip`（無ければ `error: unzip command not found.` で終了）
 
-### 3-2. 展開先の決定
+### 4-2. 展開先の決定
 
 対象zipのパスにディレクトリ区切り(`/`)が含まれるかどうかで展開先が変わります。
 
@@ -94,7 +145,7 @@ unzips [--keep] [zip_file ...]
 
 展開は `unzip -o <zip> -d <dest>`（`-o`: 確認なしで上書き）。
 
-### 3-3. サンプルファイルの重複排除（`dedup_samples_dir`）
+### 4-3. サンプルファイルの重複排除（`dedup_samples_dir`）
 
 同じ内容のサンプルが番号違いで重複しているケース（AtCoderのzip構成でまれに発生）を取り除きます。
 
@@ -107,7 +158,7 @@ unzips [--keep] [zip_file ...]
    - 削除時は `[DEDUP] removed duplicate: <相対パス>` を表示
 5. 番号が取れるファイルが1つも無ければ何もしない
 
-### 3-4. `in.txt` / `out.txt` の上書き（`overwrite_io_from_sample0`）
+### 4-4. `in.txt` / `out.txt` の上書き（`overwrite_io_from_sample0`）
 
 1. `<dest>` 内で番号が `0` のサンプル（例: `sample-0.in`）を探す
    - 見つからなければ `warning: sample-0 not found in <dest>; skip in.txt/out.txt update.` で何もせず終了
@@ -116,18 +167,18 @@ unzips [--keep] [zip_file ...]
    - `[SET] <target_dir>/in.txt <target_dir>/out.txt <- <元のベース名>` を表示
    - これが `run`（引数無し実行）で使われる入出力になる
 
-### 3-5. zipファイルの削除
+### 4-5. zipファイルの削除
 
 - デフォルト（`--keep`未指定）: 展開成功後に対象zipを削除（`[RM] <zip>`）
 - `--keep`指定時: 削除せず残す
 
-### 3-6. 複数zip指定時の挙動
+### 4-6. 複数zip指定時の挙動
 
-複数のzip（または glob で複数マッチ）が対象になった場合、**1つずつ順番に**上記3-2〜3-5の処理が行われます。途中で1つの展開に失敗しても（`unzip`がエラーを返した場合）、`set -euo pipefail` によりスクリプト全体がその時点で停止します。
+複数のzip（または glob で複数マッチ）が対象になった場合、**1つずつ順番に**上記4-2〜4-5の処理が行われます。途中で1つの展開に失敗しても（`unzip`がエラーを返した場合）、`set -euo pipefail` によりスクリプト全体がその時点で停止します。
 
 ---
 
-## 4. 前提とする入力zipの中身の形式
+## 5. 前提とする入力zipの中身の形式
 
 `unzips` は、zip展開後に得られるファイル名が次の形式であることを前提にしています。
 
@@ -143,7 +194,7 @@ sample-1.out
 
 ---
 
-## 5. 依存環境
+## 6. 依存環境
 
 - `bash`（`set -euo pipefail` 前提のスクリプト）
 - `unzip` コマンド
@@ -153,12 +204,15 @@ sample-1.out
 
 ---
 
-## 6. エラー・警告メッセージ一覧
+## 7. エラー・警告メッセージ一覧
 
 | メッセージ | 発生元 | 意味・対処 |
 |---|---|---|
-| `could not locate Windows Downloads folder.` | fetchsample | `/mnt/c/Users/<user>/Downloads` が見つからない。WSLのマウント設定を確認 |
+| `could not locate Windows Downloads folder.` | fetchsample / fetchcontest | `/mnt/c/Users/<user>/Downloads` が見つからない。WSLのマウント設定を確認 |
 | `no zip files found in <Downloads>.` | fetchsample | Downloadsが空。ブラウザ拡張でのDLができているか確認 |
+| `no problem folders (<prefix>_*) found in <cwd>.` | fetchcontest | コンテストルートに `<prefix>_*` フォルダが無い（`mkcontest` で作った構成か確認） |
+| `no matching zip files found in <Downloads> for <prefix>_*.zip.` | fetchcontest | 該当する問題のzipが1件もDownloadsに無い |
+| `zip が見つからなかった問題: <一覧>` | fetchcontest | 一部の問題だけSample DLし忘れている（警告のみ、処理は継続） |
 | `unzip command not found.` | unzips | `sudo apt install unzip` 等が必要 |
 | `no zip files found.` | unzips | カレント/1階層下にzipが無い |
 | `skip (not found): <path>` | unzips | 引数で明示したzipが存在しない |
@@ -167,13 +221,20 @@ sample-1.out
 
 ---
 
-## 7. 使用例
+## 8. 使用例
 
 問題フォルダ内で単体実行（通常のワークフロー）:
 
 ```bash
 cd ~/atcoder/abc999/abc999_a
 fetchsample                 # Downloadsの最新zip(名前は問わない)を取り込み、展開まで自動実行
+```
+
+コンテスト全体を先にまとめて取得したい場合（全問題ページでSample DL済みの状態）:
+
+```bash
+cd ~/atcoder/abc999          # mkcontest で作ったコンテストルート
+fetchcontest                 # abc999_a.zip 〜 abc999_g.zip を各問題フォルダへ振り分けて展開
 ```
 
 zipを既に問題フォルダに手動で置いてある場合:

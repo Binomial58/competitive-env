@@ -29,6 +29,8 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
     ├── mkfile            （カレントディレクトリに1ファイルだけ追加生成）
     ├── cpp_re_report.sh  （内部共有: io/ioall の RE 原因レポート）
     ├── fetchsample       （Windows Downloads の zip を問題フォルダへ取り込み）
+    ├── fetchcontest      （コンテスト単位でzipを一括取り込み）
+    ├── downloads_dir.sh  （内部共有: fetchsample/fetchcontest の Downloads フォルダ解決）
     ├── unzips            （サンプル zip を展開して samples/ へ整形）
     ├── next              （コンテスト内の次の問題フォルダへ移動）
     ├── back              （コンテスト内の前の問題フォルダへ移動）
@@ -39,7 +41,8 @@ C++/Python のビルド・実行・サンプル検証を短いコマンドで行
 ```
 
 `resolve_target.sh` / `io_compare.sh` / `mkprob_core.sh` / `cpp_re_report.sh` / `resolve_sibling.sh` /
-`git_push.sh` はコマンドとして直接実行するものではなく、上記スクリプトから `source` される共通関数ライブラリ。
+`git_push.sh` / `downloads_dir.sh` はコマンドとして直接実行するものではなく、
+上記スクリプトから `source` される共通関数ライブラリ。
 
 `~/.zshrc` に以下の1行を書くだけで PATH・関数一式が有効になる（詳細は [env.md](env.md) 参照）。
 
@@ -215,7 +218,7 @@ cleanfail
 
 ---
 
-## fetchsample / unzips：サンプル取得
+## fetchsample / fetchcontest / unzips：サンプル取得
 
 概要:
 - ブラウザ拡張（atcoder-sample-downloader）が Windows 側の Downloads に保存した zip を
@@ -223,6 +226,14 @@ cleanfail
 - `fetchsample` は Downloads 内の**最新の zip を問題名に関わらず無条件に**取り込む
   （確認プロンプトは無いので、Sample DL 後は間を置かず `fetchsample` を叩く運用が前提）
   最後に `unzips` へ処理を委譲する
+- `fetchcontest` は `mkcontest` で作ったコンテストルート（`abc999/abc999_a/`,
+  `abc999_b/`, ... という構成）またはその中の問題フォルダ（`mkcontest` 直後の
+  cd 先のまま実行できる）で実行する一括版。Downloads にある
+  `<contest_prefix>_<suffix>.zip` を（`fetchsample` と違い**問題名で**）
+  それぞれの問題フォルダへ振り分けてから `unzips` で一括展開する。
+  コンテストの全問題ページを開いて Sample DL を済ませておけば、
+  1コマンドでコンテスト分のサンプルをまとめて取得できる。
+  該当する zip が無い問題は警告を出してスキップし、処理は継続する
 - `unzips` は単体でも使え、手動で置いた zip や `abc999/` のようなコンテストルートでの一括展開にも対応する
 - 展開後、`sample-0` を `in.txt` / `out.txt` に自動コピーする（`run` の既定入出力になる）
 - 詳細な仕様（Downloads解決の優先順位、重複排除ロジック、エラーメッセージ一覧など）は [SAMPLE_FETCH.md](SAMPLE_FETCH.md) を参照
@@ -231,6 +242,8 @@ cleanfail
 ```bash
 fetchsample                 # カレントディレクトリ名を問題名として取り込み〜展開まで一括実行
 fetchsample abc999_a        # 問題名を明示指定
+
+fetchcontest                # abc999/ または abc999_a/ で実行: abc999_a.zip 〜 abc999_g.zip をまとめて取り込み〜展開
 
 unzips                      # カレントの *.zip を展開
 unzips --keep                # 展開後もzipを残す
