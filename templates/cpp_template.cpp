@@ -381,26 +381,6 @@ namespace fastio
         print(tail...);
     }
 
-    template <class T>
-    string wt_to_string(const T &x)
-    {
-        ostringstream oss;
-        auto *old_buf = cout.rdbuf(oss.rdbuf());
-        auto old_flags = cout.flags();
-        auto old_precision = cout.precision();
-        wt(x);
-        cout.rdbuf(old_buf);
-        cout.flags(old_flags);
-        cout.precision(old_precision);
-        return oss.str();
-    }
-
-    template <class T>
-    void printd_impl(const char *name, const T &x)
-    {
-        cerr << name << ':';
-        cerr << wt_to_string(x) << '\n';
-    }
 } // namespace fastio
 
 // 頻出のI/O関数だけ名前空間から取り出す
@@ -440,7 +420,6 @@ using fastio::read_set;
 #define U128(...)     \
     u128 __VA_ARGS__; \
     read(__VA_ARGS__)
-#define printd(x) fastio::printd_impl(#x, (x))
 #define VEC(type, name, size) \
     vector<type> name(size);  \
     read(name)
