@@ -29,27 +29,6 @@
 		],
 		"description": "rrep(i, a, b)"
 	},
-	"DY/DX (4-direction)": {
-		"prefix": "dxdy4",
-		"body": [
-			"vector<ll> DY = {0, -1, 0, 1}, DX = {1, 0, -1, 0};"
-		],
-		"description": "上下左右4方向の移動ベクトル"
-	},
-	"DY/DX (8-direction)": {
-		"prefix": "dxdy8",
-		"body": [
-			"vector<ll> DY = {0, -1, -1, -1, 0, 1, 1, 1}, DX = {1, 1, 0, -1, -1, -1, 0, 1};"
-		],
-		"description": "斜め込み8方向の移動ベクトル"
-	},
-	"Grid bounds check": {
-		"prefix": "inrange",
-		"body": [
-			"0 <= ${1:ny} && ${1:ny} < ${2:h} && 0 <= ${3:nx} && ${3:nx} < ${4:w}"
-		],
-		"description": "グリッド範囲内チェックの条件式"
-	},
 	"VEC input macro": {
 		"prefix": "vec",
 		"body": [
