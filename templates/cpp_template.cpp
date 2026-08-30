@@ -151,6 +151,14 @@ namespace fastio
         return s;
     }
 
+    template <class... Ts>
+    void read_cols(size_t n, vector<Ts> &...vs)
+    {
+        (vs.resize(n), ...);
+        for (size_t i = 0; i < n; i++)
+            (read(vs[i]), ...);
+    }
+
     template <class Head, class... Tail>
     void read(Head &head, Tail &...tail)
     {
@@ -381,13 +389,17 @@ namespace fastio
         print(tail...);
     }
 
+    inline void yesno(bool cond) { cout << (cond ? "Yes" : "No") << '\n'; }
+
 } // namespace fastio
 
 // 頻出のI/O関数だけ名前空間から取り出す
 using fastio::print;
 using fastio::read;
+using fastio::read_cols;
 using fastio::read_multiset;
 using fastio::read_set;
+using fastio::yesno;
 
 // 宣言+入力を1行で書くマクロ
 #define INT(...)     \
@@ -426,6 +438,12 @@ using fastio::read_set;
 #define DEQ(type, name, size) \
     deque<type> name(size);   \
     read(name)
+#define VEC2(type, name1, name2, size) \
+    vector<type> name1, name2;         \
+    read_cols(size, name1, name2)
+#define VEC3(type, name1, name2, name3, size) \
+    vector<type> name1, name2, name3;         \
+    read_cols(size, name1, name2, name3)
 #define SET(type, name, size) \
     set<type> name = read_set<type>(size)
 #define MSET(type, name, size) \
@@ -518,6 +536,31 @@ template <class T, class U>
 int bisect_right(const vector<T> &v, const U &x)
 {
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
+}
+
+template <class F>
+ll bin_search(ll ok, ll ng, F pred)
+{
+    while ((ok > ng ? ok - ng : ng - ok) > 1)
+    {
+        ll mid = ok + (ng - ok) / 2;
+        (pred(mid) ? ok : ng) = mid;
+    }
+    return ok;
+}
+
+template <class T, class U>
+auto floor_div(T a, U b)
+{
+    auto q = a / b, r = a % b;
+    return q - ((r != 0) && ((r < 0) != (b < 0)));
+}
+
+template <class T, class U>
+auto ceil_div(T a, U b)
+{
+    auto q = a / b, r = a % b;
+    return q + ((r != 0) && ((r < 0) == (b < 0)));
 }
 
 template <class T, class U>
@@ -631,6 +674,16 @@ template <class T>
 ld sum_ld(const vector<T> &v)
 {
     return accumulate(v.begin(), v.end(), 0.0L);
+}
+
+template <class R = void, class T>
+auto prefix_sum(const vector<T> &v)
+{
+    using S = conditional_t<is_void_v<R>, T, R>;
+    vector<S> s(v.size() + 1, S(0));
+    for (size_t i = 0; i < v.size(); i++)
+        s[i + 1] = s[i] + v[i];
+    return s;
 }
 
 template <class T, class AllocA, class AllocB>
@@ -763,6 +816,20 @@ inline string replace(string s, char from, char to)
 {
     std::replace(s.begin(), s.end(), from, to);
     return s;
+}
+
+template <class C>
+auto rle(const C &s)
+{
+    vector<pair<typename C::value_type, int>> res;
+    for (const auto &x : s)
+    {
+        if (!res.empty() && res.back().first == x)
+            res.back().second++;
+        else
+            res.push_back({x, 1});
+    }
+    return res;
 }
 
 constexpr int DX4[] = {1, 0, -1, 0};
@@ -924,6 +991,32 @@ struct WeightedGraph
     vector<Edge> &operator[](int i) { return g[i]; }
     const vector<Edge> &operator[](int i) const { return g[i]; }
 };
+
+inline Graph read_graph(int n, int m, bool undirected = true, int offset = 1)
+{
+    Graph g(n);
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        read(u, v);
+        g.add_edge(u - offset, v - offset, undirected);
+    }
+    return g;
+}
+
+template <class W = ll>
+WeightedGraph<W> read_wgraph(int n, int m, bool undirected = true, int offset = 1)
+{
+    WeightedGraph<W> g(n);
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        W w;
+        read(u, v, w);
+        g.add_edge(u - offset, v - offset, w, undirected);
+    }
+    return g;
+}
 
 int main()
 {

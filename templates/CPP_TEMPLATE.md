@@ -113,6 +113,16 @@ read(a);
 
 `i128` / `u128` は10進整数文字列として出力します。`vector<i128>` や `pair<i128, u128>` など、コンテナ内の128bit整数も同じルールで出力できます。
 
+### Yes/No 出力: `yesno(cond)`
+
+```cpp
+void yesno(bool cond); // cond ? "Yes" : "No" を出力して改行
+```
+
+```cpp
+yesno(a + b == c); // "Yes" or "No"
+```
+
 ---
 
 ## 3. 宣言+入力マクロ
@@ -139,6 +149,14 @@ read(a);
     deque<type> name(size); \
     read(name)
 
+#define VEC2(type, name1, name2, size) \
+    vector<type> name1, name2;         \
+    read_cols(size, name1, name2)
+
+#define VEC3(type, name1, name2, name3, size) \
+    vector<type> name1, name2, name3;         \
+    read_cols(size, name1, name2, name3)
+
 #define SET(type, name, size) \
     set<type> name = read_set<type>(size)
 
@@ -159,6 +177,9 @@ read(a);
 
 - `VVV0`/`VVVI`: 3次元vector版（3次元累積和・3次元DPなどで使用）。
   `read(...)` による入力読み込みは無い（`VV` に対する `VVV` のような読み込み版は用意していない）
+- `VEC2`/`VEC3`: `a1 b1 / a2 b2 / ...` のような**行ごとに複数の値が並ぶ入力を列ごとの
+  vector に振り分けて**読む。内部の `read_cols(n, A, B, ...)` を直接呼べば、
+  `read_cols(n, A, S)`（`vector<ll>` と `vector<string>`）のように**列ごとに型が違う**場合にも使える
 
 使用例:
 
@@ -168,6 +189,9 @@ LD(rate);
 I128(big);
 VEC(int, a, n);
 DEQ(int, dq, n);              // dequeで受け取る（両端からの追加・削除がある問題）
+VEC2(ll, A, B, n);            // a1 b1 / a2 b2 / ... を A と B に振り分けて読む
+vector<ll> C; vector<string> S;
+read_cols(n, C, S);           // 列ごとに型が違う場合は read_cols を直接使う
 SET(int, s, n);               // 重複は自動で1つにまとまる
 MSET(int, ms, n);             // 重複も保持する
 VV0(ll, dist, n, n);
@@ -306,6 +330,34 @@ int bisect_right(const vector<T> &v, const U &x);
 - `bisect_right`: `x` より大きい最初の位置
 - キーは要素と別の型でもよい（`vector<ll>` に `int` のキーを渡す等。`chmin`/`chmax` と同じ方針）
 
+### めぐる式二分探索
+
+```cpp
+template <class F> ll bin_search(ll ok, ll ng, F pred);
+```
+
+- `pred(mid)` が `true` になる側の境界値を返す汎用二分探索（答えで二分探索する問題用）
+- `ok`: `pred` が `true` と分かっている初期値、`ng`: `false` と分かっている初期値。
+  大小はどちら向きでもよい（最小化なら `ok > ng`、最大化なら `ok < ng` に取る）
+- `pred` は `[&](ll x) { ... }` のラムダで渡す。`|ok - ng| == 1` になるまで狭めて `ok` 側を返す
+
+```cpp
+// 「x個作れるか」が単調のとき、作れる最大個数
+ll ans = bin_search(0, INFLL, [&](ll x) { return can_make(x); });
+```
+
+### 切り上げ・切り下げ除算
+
+```cpp
+template <class T, class U> auto floor_div(T a, U b);
+template <class T, class U> auto ceil_div(T a, U b);
+```
+
+- `floor_div(a, b)`: `floor(a / b)`、`ceil_div(a, b)`: `ceil(a / b)` を整数演算で返す
+- **負数でも数学的に正しい**（C++ の `/` はゼロ方向切り捨てなので `-7 / 2 == -3` だが、
+  `floor_div(-7, 2) == -4`。手書きの `(a + b - 1) / b` も負数で壊れるパターン）
+- 型が混在してもよい（`int` と `ll` など。通常の算術変換に従う）
+
 ### 整数平方根 / 平方数判定
 
 ```cpp
@@ -422,6 +474,23 @@ T sum(const vector<T> &v);
   以前は内部で `0LL` 固定だったため `vector<i128>` を渡すと各要素が
   `ll` に切り詰められて壊れていた）
 
+### 累積和: `prefix_sum`
+
+```cpp
+template <class R = void, class T> auto prefix_sum(const vector<T> &v);
+```
+
+- 長さ `n+1` の累積和配列を返す（`s[0] = 0`、`s[i+1] = v[0] + ... + v[i]`）。
+  区間和は `s[r] - s[l]` で `[l, r)` の合計
+- `prefix_sum(v)` は要素と同じ型で計算。**`vector<int>` の総和が `int` を超える場合は
+  `prefix_sum<ll>(v)` と書けば `ll` で累積される**
+
+```cpp
+VEC(int, a, n);
+auto s = prefix_sum<ll>(a); // vector<ll>、長さ n+1
+ll range = s[r] - s[l];     // a[l..r) の和
+```
+
 ### シーケンス結合（`vector` / `array`）
 
 ```cpp
@@ -509,6 +578,20 @@ string replace(string s, char from, char to);
 string s = "ababa";
 string t = replace(s, "aba", "x"); // "xba"
 string u = replace(s, 'a', 'z');   // "zbzbz"
+```
+
+### ランレングス圧縮: `rle`
+
+```cpp
+template <class C> auto rle(const C &s);
+```
+
+- 連続する同じ値をまとめて `vector<pair<要素型, int>>`（値, 連続回数）で返す
+- `string` でも `vector<T>` でも使える
+
+```cpp
+auto r = rle(string("aabbba")); // {('a',2), ('b',3), ('a',1)}
+for (auto [c, len] : r) { ... }
 ```
 
 ### グリッド探索の方向配列・範囲内判定
@@ -669,6 +752,25 @@ for (auto e : WG[u]) {
     ll w = e.w;
     // ...
 }
+```
+
+### 辺の一括読み込み: `read_graph` / `read_wgraph`
+
+```cpp
+Graph read_graph(int n, int m, bool undirected = true, int offset = 1);
+template <class W = ll>
+WeightedGraph<W> read_wgraph(int n, int m, bool undirected = true, int offset = 1);
+```
+
+- `u_i v_i`（重み付きは `u_i v_i w_i`）が `m` 行並ぶ入力を読んでグラフを作って返す
+- 既定は**無向・1-indexed**（AtCoderの典型形。頂点番号から `offset` を引いて格納する）
+- 有向なら第3引数 `false`、0-indexed入力なら `offset = 0` を渡す
+
+```cpp
+INT(n, m);
+auto G = read_graph(n, m);            // 無向・1-indexed
+auto D = read_graph(n, m, false);     // 有向
+auto WG = read_wgraph(n, m);          // WeightedGraph<ll>、u v w を読む
 ```
 
 ---
