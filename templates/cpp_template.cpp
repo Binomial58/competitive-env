@@ -538,17 +538,6 @@ int bisect_right(const vector<T> &v, const U &x)
     return int(upper_bound(v.begin(), v.end(), x) - v.begin());
 }
 
-template <class F>
-ll bin_search(ll ok, ll ng, F pred)
-{
-    while ((ok > ng ? ok - ng : ng - ok) > 1)
-    {
-        ll mid = ok + (ng - ok) / 2;
-        (pred(mid) ? ok : ng) = mid;
-    }
-    return ok;
-}
-
 template <class T, class U>
 auto floor_div(T a, U b)
 {
@@ -674,16 +663,6 @@ template <class T>
 ld sum_ld(const vector<T> &v)
 {
     return accumulate(v.begin(), v.end(), 0.0L);
-}
-
-template <class R = void, class T>
-auto prefix_sum(const vector<T> &v)
-{
-    using S = conditional_t<is_void_v<R>, T, R>;
-    vector<S> s(v.size() + 1, S(0));
-    for (size_t i = 0; i < v.size(); i++)
-        s[i + 1] = s[i] + v[i];
-    return s;
 }
 
 template <class T, class AllocA, class AllocB>
@@ -991,32 +970,6 @@ struct WeightedGraph
     vector<Edge> &operator[](int i) { return g[i]; }
     const vector<Edge> &operator[](int i) const { return g[i]; }
 };
-
-inline Graph read_graph(int n, int m, bool undirected = true, int offset = 1)
-{
-    Graph g(n);
-    for (int i = 0; i < m; i++)
-    {
-        int u, v;
-        read(u, v);
-        g.add_edge(u - offset, v - offset, undirected);
-    }
-    return g;
-}
-
-template <class W = ll>
-WeightedGraph<W> read_wgraph(int n, int m, bool undirected = true, int offset = 1)
-{
-    WeightedGraph<W> g(n);
-    for (int i = 0; i < m; i++)
-    {
-        int u, v;
-        W w;
-        read(u, v, w);
-        g.add_edge(u - offset, v - offset, w, undirected);
-    }
-    return g;
-}
 
 int main()
 {

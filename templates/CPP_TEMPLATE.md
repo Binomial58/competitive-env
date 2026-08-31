@@ -330,22 +330,6 @@ int bisect_right(const vector<T> &v, const U &x);
 - `bisect_right`: `x` より大きい最初の位置
 - キーは要素と別の型でもよい（`vector<ll>` に `int` のキーを渡す等。`chmin`/`chmax` と同じ方針）
 
-### めぐる式二分探索
-
-```cpp
-template <class F> ll bin_search(ll ok, ll ng, F pred);
-```
-
-- `pred(mid)` が `true` になる側の境界値を返す汎用二分探索（答えで二分探索する問題用）
-- `ok`: `pred` が `true` と分かっている初期値、`ng`: `false` と分かっている初期値。
-  大小はどちら向きでもよい（最小化なら `ok > ng`、最大化なら `ok < ng` に取る）
-- `pred` は `[&](ll x) { ... }` のラムダで渡す。`|ok - ng| == 1` になるまで狭めて `ok` 側を返す
-
-```cpp
-// 「x個作れるか」が単調のとき、作れる最大個数
-ll ans = bin_search(0, INFLL, [&](ll x) { return can_make(x); });
-```
-
 ### 切り上げ・切り下げ除算
 
 ```cpp
@@ -473,23 +457,6 @@ T sum(const vector<T> &v);
   （`vector<ll>` なら `ll`、`vector<i128>` なら `i128` で計算される。
   以前は内部で `0LL` 固定だったため `vector<i128>` を渡すと各要素が
   `ll` に切り詰められて壊れていた）
-
-### 累積和: `prefix_sum`
-
-```cpp
-template <class R = void, class T> auto prefix_sum(const vector<T> &v);
-```
-
-- 長さ `n+1` の累積和配列を返す（`s[0] = 0`、`s[i+1] = v[0] + ... + v[i]`）。
-  区間和は `s[r] - s[l]` で `[l, r)` の合計
-- `prefix_sum(v)` は要素と同じ型で計算。**`vector<int>` の総和が `int` を超える場合は
-  `prefix_sum<ll>(v)` と書けば `ll` で累積される**
-
-```cpp
-VEC(int, a, n);
-auto s = prefix_sum<ll>(a); // vector<ll>、長さ n+1
-ll range = s[r] - s[l];     // a[l..r) の和
-```
 
 ### シーケンス結合（`vector` / `array`）
 
@@ -752,25 +719,6 @@ for (auto e : WG[u]) {
     ll w = e.w;
     // ...
 }
-```
-
-### 辺の一括読み込み: `read_graph` / `read_wgraph`
-
-```cpp
-Graph read_graph(int n, int m, bool undirected = true, int offset = 1);
-template <class W = ll>
-WeightedGraph<W> read_wgraph(int n, int m, bool undirected = true, int offset = 1);
-```
-
-- `u_i v_i`（重み付きは `u_i v_i w_i`）が `m` 行並ぶ入力を読んでグラフを作って返す
-- 既定は**無向・1-indexed**（AtCoderの典型形。頂点番号から `offset` を引いて格納する）
-- 有向なら第3引数 `false`、0-indexed入力なら `offset = 0` を渡す
-
-```cpp
-INT(n, m);
-auto G = read_graph(n, m);            // 無向・1-indexed
-auto D = read_graph(n, m, false);     // 有向
-auto WG = read_wgraph(n, m);          // WeightedGraph<ll>、u v w を読む
 ```
 
 ---
