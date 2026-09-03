@@ -1,4 +1,4 @@
-// ライブラリ: https://github.com/Binomial58/Library
+// ライブラリ: https://github.com/Vinomial/cp-library
 #include <bits/stdc++.h>
 using namespace std;
 
